@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<!-- Synthetic fixture modelled on the VW Group identity sign-in page. No real values. -->
+<html lang="de">
+<head><title>Anmelden</title></head>
+<body>
+<div class="login-container">
+  <form id="emailPasswordForm" name="emailPasswordForm" method="POST"
+        action="/signin-service/v1/09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com/login/identifier"
+        novalidate>
+    <input type="hidden" name="_csrf" value="csrf-fixture">
+    <input type="hidden" name="relayState" value="relay-fixture">
+    <input type="hidden" name="hmac" value="hmac-fixture">
+    <input type="hidden" name="registerFlow" value="false">
+    <input type="hidden" name="registerCredentialsPath" value="">
+    <input type="email" id="input_email" name="email" value="" placeholder="E-Mail-Adresse">
+    <button type="submit" id="next-btn" name="next">Weiter</button>
+  </form>
+</div>
+</body>
+</html>

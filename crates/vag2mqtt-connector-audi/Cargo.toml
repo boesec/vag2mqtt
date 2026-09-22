@@ -1,6 +1,6 @@
 [package]
 name = "vag2mqtt-connector-audi"
-description = "Audi connector for VAG2MQTT"
+description = "Audi connector for VAG2MQTT: myAudi authentication and vehicle data"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -13,3 +13,22 @@ workspace = true
 [dependencies]
 vag2mqtt-connector-api.workspace = true
 vag2mqtt-domain.workspace = true
+
+async-trait.workspace = true
+base64.workspace = true
+chrono.workspace = true
+rand.workspace = true
+reqwest.workspace = true
+scraper.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+url.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tracing-subscriber.workspace = true
+wiremock.workspace = true

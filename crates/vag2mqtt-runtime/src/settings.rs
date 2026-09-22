@@ -51,7 +51,7 @@ pub struct RuntimeSettings {
 impl Default for RuntimeSettings {
     fn default() -> Self {
         Self {
-            default_polling_interval: Duration::from_secs(300),
+            default_polling_interval: Duration::from_secs(900),
             backoff_initial: Duration::from_secs(30),
             backoff_max: Duration::from_secs(30 * 60),
             backoff_factor: 2.0,

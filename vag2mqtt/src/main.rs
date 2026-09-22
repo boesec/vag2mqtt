@@ -3,11 +3,14 @@
 //! This binary only wires things together: it reads the bootstrap settings, installs
 //! logging, makes sure the data directory exists and then hands over to the supervisor.
 //!
-//! As of WP-00 the supervisor, persistence, MQTT publisher and admin UI are still empty
-//! skeletons, so the process starts, reports its configuration and waits for a shutdown
-//! signal.
+//! As of WP-06 the supervisor, persistence, MQTT publisher and admin UI are built but not
+//! wired into the service yet; that happens with WP-08, which needs the same runtime handle for
+//! its API. The process therefore starts, reports its configuration and waits for a shutdown
+//! signal. The `debug-login` subcommand is the exception: it runs one login attempt against a
+//! manufacturer account and exits.
 
 mod cli;
+mod debug_login;
 mod logging;
 mod shutdown;
 
@@ -17,7 +20,7 @@ use anyhow::Context;
 use anyhow::Result;
 use clap::Parser;
 
-use crate::cli::Cli;
+use crate::cli::{Cli, Command};
 
 #[tokio::main]
 async fn main() -> ExitCode {
@@ -35,6 +38,10 @@ async fn main() -> ExitCode {
 
 async fn run(cli: Cli) -> Result<()> {
     logging::init(&cli.log, cli.log_format).context("failed to set up logging")?;
+
+    if let Some(Command::DebugLogin(args)) = cli.command {
+        return debug_login::run(args).await;
+    }
 
     std::fs::create_dir_all(&cli.data_dir)
         .with_context(|| format!("failed to create data directory {}", cli.data_dir.display()))?;

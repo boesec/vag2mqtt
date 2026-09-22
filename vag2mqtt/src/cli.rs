@@ -13,6 +13,7 @@ use std::net::SocketAddr;
 use std::path::PathBuf;
 
 use clap::Parser;
+use clap::Subcommand;
 use clap::ValueEnum;
 
 /// Command line and environment configuration for the service.
@@ -61,6 +62,45 @@ pub(crate) struct Cli {
         value_name = "FORMAT"
     )]
     pub(crate) log_format: LogFormat,
+
+    /// Diagnostic subcommand. Without one, the service runs.
+    #[command(subcommand)]
+    pub(crate) command: Option<Command>,
+}
+
+/// Diagnostic subcommands.
+#[derive(Debug, Subcommand)]
+pub(crate) enum Command {
+    /// Run one login attempt against a manufacturer account and report where it gets to.
+    ///
+    /// Touches neither the database nor MQTT. Exactly one attempt per invocation, so it cannot
+    /// walk an account into a lockout. Temporary: it goes away once the management interface can
+    /// do the same (WP-09).
+    DebugLogin(DebugLogin),
+}
+
+/// Arguments of `debug-login`.
+#[derive(Debug, clap::Args)]
+pub(crate) struct DebugLogin {
+    /// The manufacturer service to log in to.
+    #[arg(long, value_name = "BRAND", default_value = "audi")]
+    pub(crate) brand: DebugBrand,
+
+    /// The account's user name, usually an e-mail address.
+    #[arg(long, value_name = "USER")]
+    pub(crate) username: String,
+
+    /// Write masked request and response files into this directory. Also settable through
+    /// `VAG2MQTT_AUDI_TRACE`.
+    #[arg(long, value_name = "DIR")]
+    pub(crate) trace_dir: Option<PathBuf>,
+}
+
+/// Brands `debug-login` can try.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub(crate) enum DebugBrand {
+    /// myAudi.
+    Audi,
 }
 
 /// How log lines are rendered.

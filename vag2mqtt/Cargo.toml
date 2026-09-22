@@ -13,13 +13,16 @@ workspace = true
 
 [dependencies]
 vag2mqtt-admin.workspace = true
+vag2mqtt-connector-api.workspace = true
 vag2mqtt-connector-audi.workspace = true
 vag2mqtt-domain.workspace = true
 vag2mqtt-persistence.workspace = true
 vag2mqtt-runtime.workspace = true
 
 anyhow.workspace = true
+chrono.workspace = true
 clap.workspace = true
+rpassword.workspace = true
 tokio.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
