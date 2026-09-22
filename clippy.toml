@@ -1,0 +1,4 @@
+# `unwrap_used` and `expect_used` are denied in production code (see the workspace lint
+# table in Cargo.toml) but are perfectly normal inside tests.
+allow-unwrap-in-tests = true
+allow-expect-in-tests = true

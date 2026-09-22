@@ -1,0 +1,49 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "vag2mqtt"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+publish = false
+
+# Lints are defined once here and inherited by every crate via `[lints] workspace = true`.
+# CI runs clippy with `-D warnings`, so everything listed as `warn` fails the build there
+# while staying a warning during local development.
+[workspace.lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+unreachable_pub = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+
+[workspace.lints.clippy]
+unwrap_used = "warn"
+expect_used = "warn"
+todo = "warn"
+dbg_macro = "warn"
+
+# Internal crates. The dependency edges below mirror the architecture rules in CLAUDE.md
+# section 4; adding an edge that is not listed there needs a decision, not just an edit.
+[workspace.dependencies]
+vag2mqtt-admin = { path = "crates/vag2mqtt-admin" }
+vag2mqtt-connector-api = { path = "crates/vag2mqtt-connector-api" }
+vag2mqtt-connector-audi = { path = "crates/vag2mqtt-connector-audi" }
+vag2mqtt-domain = { path = "crates/vag2mqtt-domain" }
+vag2mqtt-mqtt = { path = "crates/vag2mqtt-mqtt" }
+vag2mqtt-persistence = { path = "crates/vag2mqtt-persistence" }
+vag2mqtt-runtime = { path = "crates/vag2mqtt-runtime" }
+
+# External crates. Only what is actually in use today is listed; each work package adds
+# what it needs (reqwest, rumqttc, sqlx, axum, askama, chacha20poly1305, ...) so that no
+# unverified version constraints sit here unused.
+anyhow = "1"
+clap = { version = "4", features = ["derive", "env"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

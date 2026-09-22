@@ -1,0 +1,10 @@
+[package]
+name = "vag2mqtt-domain"
+description = "Brand independent vehicle domain model for VAG2MQTT"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
