@@ -1,0 +1,27 @@
+# Rust build output
+/target
+**/*.rs.bk
+
+# Runtime state: database, master key, logs. Never commit any of this.
+/data
+*.key
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# Recorded manufacturer responses before anonymisation
+/fixtures/**/raw/
+
+# Editors and operating systems
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

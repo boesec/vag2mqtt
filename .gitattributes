@@ -1,0 +1,12 @@
+# Keep line endings LF everywhere, in the repository and in the working tree.
+# rustfmt is configured with `newline_style = "Unix"`, so a CRLF checkout would make
+# `cargo fmt --check` fail on the Windows CI runner.
+* text=auto eol=lf
+
+# Recorded manufacturer responses are compared byte for byte in tests.
+fixtures/** -text
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary
