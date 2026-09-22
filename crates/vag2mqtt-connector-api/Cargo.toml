@@ -1,6 +1,6 @@
 [package]
 name = "vag2mqtt-connector-api"
-description = "Connector trait and shared connector types for VAG2MQTT"
+description = "Connector trait, session and error types shared by every brand connector of VAG2MQTT"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -10,5 +10,20 @@ license.workspace = true
 [lints]
 workspace = true
 
+[features]
+# A scripted connector for tests of the runtime and the admin layer.
+fake = ["dep:tokio"]
+
 [dependencies]
 vag2mqtt-domain.workspace = true
+
+async-trait.workspace = true
+chrono.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, optional = true, features = ["time"] }
+tracing.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt", "time"] }
