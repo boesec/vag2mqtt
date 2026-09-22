@@ -1,0 +1,179 @@
+<!-- Captured from the live VW Group sign-in page on 2026-09-22 during the WP-06 login
+     spike (an unauthenticated GET of the public login page; no credentials were sent,
+     so the page carried no account data). CSRF token, HMAC, relay state and every other
+     long random run have been replaced with placeholders. Kept so the scraper is tested
+     against the shape the service really serves, not only against invented markup. -->
+
+
+<!DOCTYPE html>
+    <html lang="en" xmlns="http://www.w3.org/1999/html" dir="auto">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport"
+          content="width=device-width, height=device-height, initial-scale=1"/>
+    <meta name="identitykit" content="loginIdentifier"/>
+
+        <title>Welcome – Enter email address</title>
+
+    <link href="https://identity-cdn.vwgroup.io/assets/redacted-40/styles/audi-theme.css"
+          rel="stylesheet"/>
+    <link rel="apple-touch-icon" sizes="180x180"
+          href="https://identity-cdn.vwgroup.io/assets/redacted-40/favicons/audi/apple-touch-icon.png"/>
+    <link rel="icon" type="image/png" sizes="32x32"
+          href="https://identity-cdn.vwgroup.io/assets/redacted-40/favicons/audi/favicon-32x32.png"/>
+    <link rel="icon" type="image/png" sizes="16x16"
+          href="https://identity-cdn.vwgroup.io/assets/redacted-40/favicons/audi/favicon-16x16.png"/>
+<script src="https://identity-cdn.vwgroup.io/assets/redacted-40/javascripts/base/jquery-3.5.0.min.js"></script>
+<script type="application/javascript"
+        src="https://identity-cdn.vwgroup.io/assets/redacted-40/javascripts/base/PasswordRevealer.js"></script>
+<script type="application/javascript"
+        src="https://identity-cdn.vwgroup.io/assets/redacted-40/javascripts/base/InputFieldSessionPersistence.js"></script>
+<script type="application/javascript"
+        src="https://identity-cdn.vwgroup.io/assets/redacted-40/javascripts/base/OnDocumentLoaded.js"></script>
+<script type="application/javascript"
+        src="https://identity-cdn.vwgroup.io/assets/redacted-40/javascripts/base/TimeElapsedCounter.js"></script>
+<script type="application/javascript"
+        src="https://identity-cdn.vwgroup.io/assets/redacted-40/javascripts/base/consent.js"></script>
+<script type="application/javascript"
+        src="https://identity-cdn.vwgroup.io/assets/redacted-40/javascripts/base/InputFieldsButtonEnabler.js"></script>
+
+<script type="application/javascript">
+//<![CDATA[
+    new OnDocumentLoaded(document, callback);
+
+    function callback() {
+        new PasswordRevealer(document, document.querySelector('[type="password"]'), '#input_password_revealer');
+        new InputFieldSessionPersistence(document.getElementById("input_email"), window);
+    }
+
+//]]>
+</script>
+    <script>
+        window._IDK = {
+            templateModel: {"clientLegalEntityModel":{"clientId":"09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com","clientAppName":"myAudi App","clientAppDisplayName":"myAudi App","legalEntityInfo":{"name":"Audi","shortName":"AUDI","productName":"Audi ID","theme":"audi","defaultLanguage":"de","termAndConditionsType":"DEFAULT","legalProperties":{"revokeDataContact":"","imprintText":"IMPRINT","countryOfJurisdiction":"DE"}},"informalLanguage":false,"legalEntityCode":"audi","imprintTextKey":"imprint.link.text"},"template":"loginIdentifier","hmac":"hmac-live-fixture","useClientRendering":false,"titleKey":"title.login.email","title":null,"relayState":"relay-live-fixture","emailPasswordForm":{"@class":"com.volkswagen.identitykit.signin.domain.model.dto.EmailPasswordForm","email":null,"password":null},"error":null},
+            disabledFeatures: {
+                isRTLEnabled: true,
+            },
+            currentLocale: 'en',
+            csrf_parameterName: '_csrf',
+            csrf_token: 'csrf-live-fixture',
+            userSession: {
+                userId: '',
+                countryOfResidence: ''
+            },
+            baseUrl: 'https://identity.vwgroup.io',
+            consentBaseUrl: 'http://consentapi-service.idk-peu.svc.cluster.local:8080',
+            cancelContractUrl: '',
+            withdrawContractUrl: 'https://profile.my.audi.com/de/de/withdrawal/',
+            footerDocuments: ["imprint","termsOfUse","dataPrivacy","cookiePolicy","europeanAccessibilityAct"]
+        }
+    </script>
+</head>
+<body>
+
+
+
+    <div id="page-container-background" role="img"
+         aria-label="A person stands in front of an Audi. In the background is a futuristic building.">
+    </div>
+
+    <div class="body-container">
+
+
+
+        <div class="page-container loginIdentifier-page">
+            <div class="page-content">
+                <div class="hide spacer-top"></div>
+
+
+
+                    <div id="legal-entity" class="legal-entity">
+                        <div class="legal-entity-logo" role="img"
+                             aria-label="Audi logo"
+                             title="Audi logo"></div>
+                            <div id="legal-entity-name" class="legal-entity-name">
+                                Audi ID
+                            </div>
+                    </div>
+
+<form class="content" id="emailPasswordForm"
+      name="emailPasswordForm"
+      method="POST"
+      novalidate="true"
+      action="/signin-service/v1/09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com/login/identifier">
+    <div id="title" class="title">
+        <div class="primary-title">Welcome</div>
+        <div class="sub-title">to myAudi App.</div>
+    </div>
+    <input type="hidden" id="csrf" name="_csrf" value="csrf-live-fixture"/>
+    <input type="hidden" id="input_relayState" name="relayState" value="relay-live-fixture"/>
+    <input type="hidden" id="hmac" name="hmac" value="hmac-live-fixture"/>
+    <div class="inputs">
+<div class="group">
+    <input
+            id="input_email"
+            data-testid="input-email"
+            name="email"
+            type="email"
+            required="true"
+            autofocus="true"
+            aria-labelledby="input-label"
+                onkeyup="this.setAttribute('input-value',this.value)"
+            
+            
+            autocomplete="email"
+    />
+    <span class="bar"></span>
+    <label id="input-label" for="input_email" aria-hidden="true">Email</label>
+    
+
+</div>
+    </div>
+    <div class="btn-group-single">
+<button
+        id="next-btn"
+        data-testid="btn-next"
+        
+        class="btn zenith-button btn-active"
+        type="submit"
+        
+>
+    Next
+</button>
+    </div>
+    <div class="link">
+        <a id="signup-link"
+           data-testid="link-signup"
+           class="zenith-link"
+           href="/signin-service/v1/09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com/register/identifier?relayState=redacted-40">
+        Create account
+        </a>
+    </div>
+
+    <script type="application/javascript"
+            src="https://identity-cdn.vwgroup.io/assets/redacted-40/javascripts/base/InputFieldsButtonEnabler.js"></script>
+    <script>
+        new OnDocumentLoaded(document, callback);
+
+        function callback() {
+            new InputFieldsButtonEnabler(document.querySelector("#input_email"), document.querySelector("#next-btn"));
+        }
+    </script>
+</form>
+
+
+                <div class="hide spacer-bottom"></div>
+
+
+
+    <div class="idk-react-footer"></div>
+            </div>
+        </div>
+
+
+
+    <div class="idk-react-footer"></div>
+    </div>
+<script type="text/javascript" src="https://identity-cdn.vwgroup.io/assets/redacted-40/signIn.bundle.js"></script>
+</body>
+</html>

@@ -162,15 +162,8 @@ pub fn scrape_form(html: &str, ids: &[&str], action_hint: &str) -> Option<Scrape
     Some(ScrapedForm { action, fields })
 }
 
-/// The `window._IDK = {...}` model some sign-in pages render instead of a plain form.
-#[derive(Debug, Deserialize)]
-struct IdkModel {
-    #[serde(rename = "templateModel")]
-    template_model: Option<IdkTemplate>,
-    #[serde(rename = "csrf_token")]
-    csrf_token: Option<String>,
-}
-
+/// The `templateModel` value inside a `window._IDK = {...}` block. Strict JSON, unlike the
+/// JavaScript literal around it.
 #[derive(Debug, Deserialize)]
 struct IdkTemplate {
     hmac: Option<String>,
@@ -182,24 +175,67 @@ struct IdkTemplate {
     email_password_form: Option<serde_json::Value>,
 }
 
-/// Extracts the password form from a `window._IDK = {...};` script block.
-pub fn scrape_idk_form(html: &str, client_id: &str) -> Option<ScrapedForm> {
+/// Extracts a form from a `window._IDK = {...};` script block.
+///
+/// The live block is a JavaScript object literal with unquoted keys and single quoted strings,
+/// so it is **not** strict JSON. Only the `templateModel` value is, and that is the part that
+/// carries `hmac` and `relayState`. The CSRF token is read out of the surrounding literal by
+/// name. Used when a page renders its form by script instead of serving one.
+pub fn scrape_idk_form(html: &str, client_id: &str, action_path: &str) -> Option<ScrapedForm> {
     let start = html.find("window._IDK")?;
-    let brace = html[start..].find('{')? + start;
-    let json = balanced_json(&html[brace..])?;
-    let model: IdkModel = serde_json::from_str(json).ok()?;
-    let template = model.template_model?;
+    let block = &html[start..];
+    let template_key = block.find("templateModel")?;
+    let brace = block[template_key..].find('{')? + template_key;
+    let json = balanced_json(&block[brace..])?;
+    let template: IdkTemplate = serde_json::from_str(json).ok()?;
     let mut fields = BTreeMap::new();
     fields.insert("hmac".to_string(), template.hmac?);
     fields.insert("relayState".to_string(), template.relay_state?);
-    if let Some(csrf) = model.csrf_token {
+    if let Some(csrf) = javascript_string_field(block, "csrf_token") {
         fields.insert("_csrf".to_string(), csrf);
     }
     let action = template
         .post_action
-        .unwrap_or_else(|| format!("/signin-service/v1/{client_id}/login/authenticate"));
+        .unwrap_or_else(|| format!("/signin-service/v1/{client_id}{action_path}"));
     let _ = template.email_password_form;
     Some(ScrapedForm { action, fields })
+}
+
+/// Reads `name: VALUE` out of a JavaScript object literal, where VALUE is a quoted string.
+///
+/// Tolerates both spellings the service uses: a bare key as in `csrf_token: 'abc'` and a quoted
+/// one as in `"csrf_token": "abc"`.
+fn javascript_string_field(text: &str, name: &str) -> Option<String> {
+    let after_key = [format!("{name}:"), format!("{name}\":")]
+        .iter()
+        .filter_map(|key| find_at_word_boundary(text, key).map(|at| at + key.len()))
+        .min()?;
+    let rest = &text[after_key..];
+    // Only whitespace may sit between the colon and the opening quote.
+    let quote = rest.find(['\'', '"'])?;
+    if !rest[..quote].chars().all(char::is_whitespace) {
+        return None;
+    }
+    let delimiter = rest[quote..].chars().next()?;
+    let value_start = quote + delimiter.len_utf8();
+    let end = rest[value_start..].find(delimiter)? + value_start;
+    Some(rest[value_start..end].to_string())
+}
+
+/// Finds `needle` where the character before it is not part of an identifier, so looking for
+/// `n":` does not match the tail of `csrf_token":`.
+fn find_at_word_boundary(text: &str, needle: &str) -> Option<usize> {
+    let mut from = 0;
+    while let Some(offset) = text[from..].find(needle) {
+        let at = from + offset;
+        let preceding = text[..at].chars().next_back();
+        let is_boundary = preceding.is_none_or(|c| !(c.is_alphanumeric() || c == '_'));
+        if is_boundary {
+            return Some(at);
+        }
+        from = at + needle.len();
+    }
+    None
 }
 
 /// Returns the JSON object starting at `text[0] == '{'`, honouring nesting and strings.
@@ -403,6 +439,7 @@ impl FormLoginStrategy {
 
         // Step 2: the e-mail form.
         let email_form = scrape_form(&page.body, &["emailPasswordForm"], "/login/identifier")
+            .or_else(|| scrape_idk_form(&page.body, &self.endpoints.client_id, "/login/identifier"))
             .ok_or_else(|| self.page_error(Step::SigninForm, &page))?;
         trace.outcome(
             Step::SigninForm,
@@ -439,7 +476,13 @@ impl FormLoginStrategy {
             &["credentialsForm"],
             "/login/authenticate",
         )
-        .or_else(|| scrape_idk_form(&password_page.body, &self.endpoints.client_id))
+        .or_else(|| {
+            scrape_idk_form(
+                &password_page.body,
+                &self.endpoints.client_id,
+                "/login/authenticate",
+            )
+        })
         .ok_or_else(|| self.page_error(Step::PasswordPost, &password_page))?;
         trace.outcome(
             Step::PasswordPost,
@@ -715,7 +758,12 @@ mod tests {
         );
         assert!(plain.fields.contains_key("password"));
 
-        let idk = scrape_idk_form(&fixture("signin_password_idk.html"), "client-fixture").unwrap();
+        let idk = scrape_idk_form(
+            &fixture("signin_password_idk.html"),
+            "client-fixture",
+            "/login/authenticate",
+        )
+        .unwrap();
         assert_eq!(
             idk.action,
             "/signin-service/v1/client-fixture/login/authenticate"
@@ -749,7 +797,10 @@ mod tests {
                 context: "signin_form"
             }
         );
-        assert_eq!(scrape_idk_form("<html></html>", "x"), None);
+        assert_eq!(
+            scrape_idk_form("<html></html>", "x", "/login/authenticate"),
+            None
+        );
     }
 
     #[test]
@@ -800,6 +851,84 @@ mod tests {
             parse_token_response("not json", "form", None),
             Err(ConnectorError::Parsing { .. })
         ));
+    }
+
+    /// The page the service really served on 2026-09-22, anonymised. Guards against fixtures
+    /// that only match our own invented markup.
+    #[test]
+    fn the_live_sign_in_page_is_scraped() {
+        let html = fixture("live_signin_identifier_2026-09-22.html");
+        let form = scrape_form(&html, &["emailPasswordForm"], "/login/identifier")
+            .expect("the live page carries a real form element");
+        assert_eq!(
+            form.action,
+            "/signin-service/v1/09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com/login/identifier"
+        );
+        assert_eq!(
+            form.fields.get("_csrf").map(String::as_str),
+            Some("csrf-live-fixture")
+        );
+        assert_eq!(
+            form.fields.get("relayState").map(String::as_str),
+            Some("relay-live-fixture")
+        );
+        assert_eq!(
+            form.fields.get("hmac").map(String::as_str),
+            Some("hmac-live-fixture")
+        );
+        assert!(
+            form.fields.contains_key("email"),
+            "the e-mail input is carried over"
+        );
+        assert!(
+            !form.fields.contains_key("next-btn"),
+            "the submit button is not a field"
+        );
+        assert_eq!(form.fields.len(), 4, "{:?}", form.fields);
+
+        // The same page carries a window._IDK literal; the fallback must read it, and that
+        // literal is JavaScript, not JSON.
+        let idk = scrape_idk_form(
+            &html,
+            "09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com",
+            "/login/identifier",
+        )
+        .expect("the _IDK fallback reads the live block");
+        assert_eq!(
+            idk.fields.get("hmac").map(String::as_str),
+            Some("hmac-live-fixture")
+        );
+        assert_eq!(
+            idk.fields.get("relayState").map(String::as_str),
+            Some("relay-live-fixture")
+        );
+        assert_eq!(
+            idk.fields.get("_csrf").map(String::as_str),
+            Some("csrf-live-fixture")
+        );
+        assert!(idk.action.ends_with("/login/identifier"));
+
+        // No CAPTCHA and no second factor on the page the service serves today.
+        assert_eq!(classify_challenge_page(&html), None);
+    }
+
+    #[test]
+    fn javascript_string_fields_are_read_from_a_literal() {
+        let literal = "{ a: 1, csrf_token: 'abc-123', b: \"x\" }";
+        assert_eq!(
+            javascript_string_field(literal, "csrf_token"),
+            Some("abc-123".into())
+        );
+        assert_eq!(javascript_string_field(literal, "b"), Some("x".into()));
+        assert_eq!(javascript_string_field(literal, "missing"), None);
+        // The quoted spelling, as strict JSON writes it.
+        let json_style = "{\"csrf_token\": \"abc-123\", \"n\": 1}";
+        assert_eq!(
+            javascript_string_field(json_style, "csrf_token"),
+            Some("abc-123".into())
+        );
+        // A number is not a string, so nothing is read.
+        assert_eq!(javascript_string_field(json_style, "n"), None);
     }
 
     #[test]
