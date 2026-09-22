@@ -40,7 +40,7 @@ pub struct PollingConfig {
     ///
     /// Serialised as whole seconds under `interval_secs`. A connector may declare a minimum that
     /// the runtime enforces (FR-013).
-    #[serde(rename = "interval_secs", with = "duration_secs")]
+    #[serde(rename = "interval_secs", with = "crate::serde_helpers::duration_secs")]
     pub interval: Duration,
 }
 
@@ -75,26 +75,6 @@ impl AccountConnectionState {
         AccountConnectionState::Error,
         AccountConnectionState::Disabled,
     ];
-}
-
-/// Serde helper: a `Duration` as an integer number of whole seconds.
-mod duration_secs {
-    use std::time::Duration;
-
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
-
-    pub(super) fn serialize<S: Serializer>(
-        duration: &Duration,
-        serializer: S,
-    ) -> Result<S::Ok, S::Error> {
-        duration.as_secs().serialize(serializer)
-    }
-
-    pub(super) fn deserialize<'de, D: Deserializer<'de>>(
-        deserializer: D,
-    ) -> Result<Duration, D::Error> {
-        u64::deserialize(deserializer).map(Duration::from_secs)
-    }
 }
 
 #[cfg(test)]

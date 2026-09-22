@@ -21,15 +21,18 @@
 //! Implemented by WP-01.
 
 pub mod account;
+pub mod config;
 pub mod error;
 pub mod id;
 pub mod reading;
 pub mod secret;
+mod serde_helpers;
 pub mod state;
 pub mod units;
 pub mod vehicle;
 
 pub use account::{Account, AccountConnectionState, PollingConfig};
+pub use config::{MqttConfig, MqttProtocol};
 pub use error::{DomainError, ErrorCategory, LastError};
 pub use id::{AccountId, Brand, DataSourceKind, Drivetrain, Vin};
 pub use reading::{Reading, Sample};

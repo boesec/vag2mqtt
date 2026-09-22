@@ -26,6 +26,10 @@ pub struct Vehicle {
     pub drivetrain: Drivetrain,
     /// Whether the runtime should poll this vehicle. Disabling a vehicle keeps its account.
     pub enabled: bool,
+    /// Set when discovery no longer returns this VIN (FR-005). `None` means the manufacturer
+    /// still lists the vehicle. A missing vehicle is kept, not polled, and shown as unavailable
+    /// until the user deletes it explicitly.
+    pub missing_since: Option<DateTime<Utc>>,
     /// Freshness of the vehicle's data as judged by the runtime.
     pub data_state: VehicleDataState,
     /// When the vehicle's state was last fetched successfully.
@@ -90,6 +94,7 @@ mod tests {
             display_name: None,
             drivetrain: Drivetrain::Electric,
             enabled: true,
+            missing_since: None,
             data_state: VehicleDataState::Pending,
             last_update_at: None,
             last_error: None,

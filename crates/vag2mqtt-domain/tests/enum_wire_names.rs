@@ -9,7 +9,7 @@ use vag2mqtt_domain::state::{
     WindowPosition,
 };
 use vag2mqtt_domain::{
-    AccountConnectionState, Brand, DataSourceKind, Drivetrain, ErrorCategory, Unit,
+    AccountConnectionState, Brand, DataSourceKind, Drivetrain, ErrorCategory, MqttProtocol, Unit,
     VehicleDataState,
 };
 
@@ -154,6 +154,11 @@ fn account_and_vehicle_enums() {
             "internal",
         ],
     );
+}
+
+#[test]
+fn config_enums() {
+    assert_wire_names(MqttProtocol::ALL, &["v3_1_1", "v5"]);
 }
 
 #[test]
