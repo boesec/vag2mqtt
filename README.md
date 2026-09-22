@@ -85,16 +85,7 @@ their source under `Docs/reference/`.
 
 ## Licence
 
-[PolyForm Noncommercial License 1.0.0](LICENSE).
+[MIT](LICENSE). Use it for anything, including commercially, as long as the
+copyright notice travels with it.
 
-Free for private use: your own cars at home, hobby projects, self study and
-experimenting, as well as for charities, schools, universities, public research
-and government institutions.
-
-Any use in or for a business needs a separate commercial licence. See
-[COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md) for where the line runs and how to
-ask for one.
-
-This makes VAG2MQTT source available, not open source in the OSI sense.
-
-Contributions are welcome under the terms in [CONTRIBUTING.md](CONTRIBUTING.md).
+Contributions are welcome, see [CONTRIBUTING.md](CONTRIBUTING.md).

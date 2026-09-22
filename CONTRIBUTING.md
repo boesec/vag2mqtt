@@ -5,21 +5,12 @@ requests are all welcome.
 
 ## Licensing of contributions
 
-This project is dual licensed: everyone gets the
-[PolyForm Noncommercial License](LICENSE) for free, and commercial users buy a
-separate licence. That only works if the maintainer holds the rights to the
-whole codebase.
+This project is [MIT](LICENSE) licensed. By opening a pull request you confirm
+that you wrote the contribution yourself or otherwise have the right to submit
+it, and that it is contributed under the same MIT licence. You keep your
+copyright.
 
-So by opening a pull request you confirm that:
-
-1. You wrote the contribution yourself, or you have the right to submit it.
-2. You grant the maintainer a perpetual, worldwide, irrevocable right to use
-   your contribution and to license it to others, including under commercial
-   terms that differ from the PolyForm licence.
-3. You keep your own copyright. This is a licence grant, not an assignment.
-
-If you cannot agree to that, please open an issue describing the problem and the
-fix instead of sending code. A good description is still very useful.
+That is all. There is no contributor licence agreement to sign.
 
 ## Before you send code
 
