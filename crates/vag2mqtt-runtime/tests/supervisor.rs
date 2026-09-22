@@ -668,9 +668,7 @@ async fn polling_continues_without_mqtt_and_stale_is_detected() {
             .get(&vin("0TEST"))
             .await
             .unwrap()
-            .unwrap()
-            .data_state
-            == VehicleDataState::Fresh
+            .is_some_and(|v| v.data_state == VehicleDataState::Fresh)
     })
     .await;
     assert!(h.recorders.lock().unwrap().is_empty());
@@ -689,9 +687,7 @@ async fn polling_continues_without_mqtt_and_stale_is_detected() {
             .get(&vin("0TEST"))
             .await
             .unwrap()
-            .unwrap()
-            .data_state
-            == VehicleDataState::Stale
+            .is_some_and(|v| v.data_state == VehicleDataState::Stale)
     })
     .await;
     h.handle.shutdown().await.unwrap();
