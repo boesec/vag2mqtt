@@ -1,0 +1,215 @@
+{
+  "fetched_at": "2026-09-22T10:30:00Z",
+  "odometer": {
+    "state": "present",
+    "value": 12345,
+    "source_time": "2026-09-22T10:01:00Z"
+  },
+  "battery": {
+    "soc": {
+      "state": "present",
+      "value": 80,
+      "source_time": "2026-09-22T10:02:00Z"
+    },
+    "range": {
+      "state": "present",
+      "value": 410,
+      "source_time": "2026-09-22T10:02:00Z"
+    }
+  },
+  "fuel": {
+    "level": {
+      "state": "unsupported"
+    },
+    "range": {
+      "state": "unsupported"
+    }
+  },
+  "charging": {
+    "state": {
+      "state": "present",
+      "value": "charging",
+      "source_time": "2026-09-22T10:03:00Z"
+    },
+    "mode": {
+      "state": "present",
+      "value": "manual",
+      "source_time": "2026-09-22T10:03:00Z"
+    },
+    "current_type": {
+      "state": "present",
+      "value": "ac",
+      "source_time": "2026-09-22T10:03:00Z"
+    },
+    "power": {
+      "state": "present",
+      "value": 11.0,
+      "source_time": "2026-09-22T10:03:00Z"
+    },
+    "remaining_time": {
+      "state": "present",
+      "value": 95,
+      "source_time": "2026-09-22T10:03:00Z"
+    },
+    "target_soc": {
+      "state": "present",
+      "value": 90,
+      "source_time": null
+    }
+  },
+  "plug": {
+    "connection": {
+      "state": "present",
+      "value": "connected",
+      "source_time": "2026-09-22T10:03:00Z"
+    },
+    "lock": {
+      "state": "present",
+      "value": "locked",
+      "source_time": "2026-09-22T10:03:00Z"
+    },
+    "external_power": {
+      "state": "present",
+      "value": "active",
+      "source_time": "2026-09-22T10:03:00Z"
+    }
+  },
+  "doors": {
+    "overall": {
+      "state": "present",
+      "value": "closed",
+      "source_time": "2026-09-22T10:05:00Z"
+    },
+    "lock": {
+      "state": "present",
+      "value": "locked",
+      "source_time": "2026-09-22T10:05:00Z"
+    },
+    "by_position": {
+      "front_left": {
+        "state": "present",
+        "value": "closed",
+        "source_time": "2026-09-22T10:05:00Z"
+      },
+      "front_right": {
+        "state": "present",
+        "value": "closed",
+        "source_time": "2026-09-22T10:05:00Z"
+      },
+      "rear_left": {
+        "state": "present",
+        "value": "closed",
+        "source_time": "2026-09-22T10:05:00Z"
+      },
+      "rear_right": {
+        "state": "present",
+        "value": "closed",
+        "source_time": "2026-09-22T10:05:00Z"
+      },
+      "trunk": {
+        "state": "present",
+        "value": "closed",
+        "source_time": "2026-09-22T10:05:00Z"
+      },
+      "bonnet": {
+        "state": "unsupported"
+      }
+    }
+  },
+  "windows": {
+    "overall": {
+      "state": "present",
+      "value": "closed",
+      "source_time": "2026-09-22T10:05:00Z"
+    },
+    "by_position": {
+      "front_left": {
+        "state": "present",
+        "value": "closed",
+        "source_time": "2026-09-22T10:05:00Z"
+      },
+      "front_right": {
+        "state": "present",
+        "value": "closed",
+        "source_time": "2026-09-22T10:05:00Z"
+      },
+      "rear_left": {
+        "state": "present",
+        "value": "closed",
+        "source_time": "2026-09-22T10:05:00Z"
+      },
+      "rear_right": {
+        "state": "present",
+        "value": "closed",
+        "source_time": "2026-09-22T10:05:00Z"
+      },
+      "sun_roof": {
+        "state": "unavailable"
+      }
+    }
+  },
+  "position": {
+    "state": "present",
+    "value": {
+      "latitude": 51.0,
+      "longitude": 9.0,
+      "heading_degrees": 180.0
+    },
+    "source_time": "2026-09-22T10:06:00Z"
+  },
+  "climatisation": {
+    "state": {
+      "state": "present",
+      "value": "heating",
+      "source_time": "2026-09-22T10:07:00Z"
+    },
+    "target_temperature": {
+      "state": "present",
+      "value": 21.5,
+      "source_time": "2026-09-22T10:07:00Z"
+    },
+    "remaining_time": {
+      "state": "unavailable"
+    }
+  },
+  "status": {
+    "connection": {
+      "state": "present",
+      "value": "online",
+      "source_time": "2026-09-22T10:08:00Z"
+    },
+    "activity": {
+      "state": "present",
+      "value": "parked",
+      "source_time": "2026-09-22T10:08:00Z"
+    },
+    "secured": {
+      "state": "present",
+      "value": true,
+      "source_time": "2026-09-22T10:08:00Z"
+    },
+    "outside_temperature": {
+      "state": "present",
+      "value": 14.0,
+      "source_time": "2026-09-22T10:08:00Z"
+    }
+  },
+  "service": {
+    "inspection_due_in": {
+      "state": "present",
+      "value": 120,
+      "source_time": "2026-09-22T10:09:00Z"
+    },
+    "inspection_due_after": {
+      "state": "present",
+      "value": -150,
+      "source_time": "2026-09-22T10:09:00Z"
+    },
+    "oil_service_due_in": {
+      "state": "unsupported"
+    },
+    "oil_service_due_after": {
+      "state": "unsupported"
+    }
+  }
+}

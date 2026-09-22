@@ -9,3 +9,12 @@ license.workspace = true
 
 [lints]
 workspace = true
+
+[dependencies]
+chrono = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+zeroize = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

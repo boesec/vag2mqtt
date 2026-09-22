@@ -39,10 +39,15 @@ vag2mqtt-runtime = { path = "crates/vag2mqtt-runtime" }
 # what it needs (reqwest, rumqttc, sqlx, axum, askama, chacha20poly1305, ...) so that no
 # unverified version constraints sit here unused.
 anyhow = "1"
+chrono = { version = "0.4", features = ["serde"] }
 clap = { version = "4", features = ["derive", "env"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
 tokio = { version = "1", features = ["macros", "rt-multi-thread", "signal"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+zeroize = "1"
 
 [profile.release]
 lto = "thin"
