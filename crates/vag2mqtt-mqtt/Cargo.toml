@@ -1,6 +1,6 @@
 [package]
 name = "vag2mqtt-mqtt"
-description = "mqtt-smarthome compatible publisher for VAG2MQTT"
+description = "mqtt-smarthome publisher for VAG2MQTT"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -12,3 +12,16 @@ workspace = true
 
 [dependencies]
 vag2mqtt-domain.workspace = true
+
+chrono.workspace = true
+rumqttc.workspace = true
+rustls.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["sync", "time", "rt", "macros"] }
+tracing.workspace = true
+
+[dev-dependencies]
+rumqttd.workspace = true
+tokio = { workspace = true, features = ["net", "io-util"] }

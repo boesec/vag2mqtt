@@ -1,0 +1,177 @@
+[
+  {
+    "path": "odometer",
+    "ts": "2026-09-22T10:01:00Z",
+    "val": 12345
+  },
+  {
+    "path": "battery/soc",
+    "ts": "2026-09-22T10:02:00Z",
+    "val": 80
+  },
+  {
+    "path": "battery/range",
+    "ts": "2026-09-22T10:02:00Z",
+    "val": 410
+  },
+  {
+    "path": "charging/state",
+    "ts": "2026-09-22T10:03:00Z",
+    "val": "charging"
+  },
+  {
+    "path": "charging/mode",
+    "ts": "2026-09-22T10:03:00Z",
+    "val": "manual"
+  },
+  {
+    "path": "charging/current_type",
+    "ts": "2026-09-22T10:03:00Z",
+    "val": "ac"
+  },
+  {
+    "path": "charging/power",
+    "ts": "2026-09-22T10:03:00Z",
+    "val": 11.0
+  },
+  {
+    "path": "charging/remaining_time",
+    "ts": "2026-09-22T10:03:00Z",
+    "val": 95
+  },
+  {
+    "path": "charging/target_soc",
+    "ts": "2026-09-22T10:30:00Z",
+    "val": 90
+  },
+  {
+    "path": "plug/connection",
+    "ts": "2026-09-22T10:03:00Z",
+    "val": "connected"
+  },
+  {
+    "path": "plug/lock",
+    "ts": "2026-09-22T10:03:00Z",
+    "val": "locked"
+  },
+  {
+    "path": "plug/external_power",
+    "ts": "2026-09-22T10:03:00Z",
+    "val": "active"
+  },
+  {
+    "path": "doors/open",
+    "ts": "2026-09-22T10:05:00Z",
+    "val": "closed"
+  },
+  {
+    "path": "doors/lock",
+    "ts": "2026-09-22T10:05:00Z",
+    "val": "locked"
+  },
+  {
+    "path": "doors/front_left/open",
+    "ts": "2026-09-22T10:05:00Z",
+    "val": "closed"
+  },
+  {
+    "path": "doors/front_right/open",
+    "ts": "2026-09-22T10:05:00Z",
+    "val": "closed"
+  },
+  {
+    "path": "doors/rear_left/open",
+    "ts": "2026-09-22T10:05:00Z",
+    "val": "closed"
+  },
+  {
+    "path": "doors/rear_right/open",
+    "ts": "2026-09-22T10:05:00Z",
+    "val": "closed"
+  },
+  {
+    "path": "doors/trunk/open",
+    "ts": "2026-09-22T10:05:00Z",
+    "val": "closed"
+  },
+  {
+    "path": "windows/open",
+    "ts": "2026-09-22T10:05:00Z",
+    "val": "closed"
+  },
+  {
+    "path": "windows/front_left/open",
+    "ts": "2026-09-22T10:05:00Z",
+    "val": "closed"
+  },
+  {
+    "path": "windows/front_right/open",
+    "ts": "2026-09-22T10:05:00Z",
+    "val": "closed"
+  },
+  {
+    "path": "windows/rear_left/open",
+    "ts": "2026-09-22T10:05:00Z",
+    "val": "closed"
+  },
+  {
+    "path": "windows/rear_right/open",
+    "ts": "2026-09-22T10:05:00Z",
+    "val": "closed"
+  },
+  {
+    "path": "position/latitude",
+    "ts": "2026-09-22T10:06:00Z",
+    "val": 51.0
+  },
+  {
+    "path": "position/longitude",
+    "ts": "2026-09-22T10:06:00Z",
+    "val": 9.0
+  },
+  {
+    "path": "position/heading",
+    "ts": "2026-09-22T10:06:00Z",
+    "val": 180.0
+  },
+  {
+    "path": "climatisation/state",
+    "ts": "2026-09-22T10:07:00Z",
+    "val": "heating"
+  },
+  {
+    "path": "climatisation/target_temperature",
+    "ts": "2026-09-22T10:07:00Z",
+    "val": 21.5
+  },
+  {
+    "path": "status/connection",
+    "ts": "2026-09-22T10:08:00Z",
+    "val": "online"
+  },
+  {
+    "path": "status/activity",
+    "ts": "2026-09-22T10:08:00Z",
+    "val": "parked"
+  },
+  {
+    "path": "status/secured",
+    "ts": "2026-09-22T10:08:00Z",
+    "val": true
+  },
+  {
+    "path": "status/outside_temperature",
+    "ts": "2026-09-22T10:08:00Z",
+    "val": 14.0
+  },
+  {
+    "path": "service/inspection_due_days",
+    "ts": "2026-09-22T10:09:00Z",
+    "val": 120
+  },
+  {
+    "path": "service/inspection_due_km",
+    "ts": "2026-09-22T10:09:00Z",
+    "val": -150
+  }
+]
