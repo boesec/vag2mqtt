@@ -1,6 +1,6 @@
 [package]
 name = "vag2mqtt-runtime"
-description = "Account supervisor, polling scheduler and live reconfiguration for VAG2MQTT"
+description = "Supervisor, per account tasks and polling for VAG2MQTT"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -15,3 +15,16 @@ vag2mqtt-connector-api.workspace = true
 vag2mqtt-domain.workspace = true
 vag2mqtt-mqtt.workspace = true
 vag2mqtt-persistence.workspace = true
+
+chrono.workspace = true
+rand.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["sync", "time", "rt", "macros"] }
+tracing.workspace = true
+
+[dev-dependencies]
+vag2mqtt-connector-api = { workspace = true, features = ["fake"] }
+tempfile.workspace = true
+tokio = { workspace = true, features = ["rt-multi-thread"] }

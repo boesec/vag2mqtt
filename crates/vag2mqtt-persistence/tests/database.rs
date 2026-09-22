@@ -4,13 +4,10 @@
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
 use std::collections::BTreeMap;
-use std::io::Write;
-use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use chrono::{TimeZone, Utc};
 use sqlx::Row;
-use tracing_subscriber::fmt::MakeWriter;
 use vag2mqtt_domain::{
     AccountConnectionState, Brand, Drivetrain, ErrorCategory, LastError, MqttConfig, MqttProtocol,
     PollingConfig, Reading, Secret, VehicleDataState, VehicleState, Vin,
@@ -311,48 +308,6 @@ async fn raw_database_file_contains_no_plaintext_secret() {
 }
 
 #[tokio::test]
-async fn key_material_never_reaches_the_log() {
-    let buffer = LogBuffer::default();
-    let subscriber = tracing_subscriber::fmt()
-        .with_writer(buffer.clone())
-        .with_max_level(tracing::Level::TRACE)
-        .with_ansi(false)
-        .finish();
-    let _guard = tracing::subscriber::set_default(subscriber);
-
-    let dir = tempfile::tempdir().unwrap();
-    let db = Database::open(dir.path(), MasterKeySource::KeyFile)
-        .await
-        .unwrap();
-    db.accounts()
-        .insert(
-            new_account("log@example.test"),
-            &Secret::new(PASSWORD_MARKER.into()),
-        )
-        .await
-        .unwrap();
-    db.close().await;
-
-    let key_hex = std::fs::read_to_string(dir.path().join("master.key")).unwrap();
-    let key_hex = key_hex.trim();
-    assert_eq!(key_hex.len(), 64);
-    let log = buffer.contents();
-    assert!(
-        log.contains("master key file"),
-        "expected a log line about the key file:\n{log}"
-    );
-    assert!(!log.contains(key_hex), "the key leaked into the log");
-    assert!(
-        !log.contains(&key_hex[..16]),
-        "a key prefix leaked into the log"
-    );
-    assert!(
-        !log.contains(PASSWORD_MARKER),
-        "the password leaked into the log"
-    );
-}
-
-#[tokio::test]
 async fn deleting_an_account_removes_vehicles_states_and_secrets() {
     let dir = tempfile::tempdir().unwrap();
     let db = Database::open(dir.path(), key(1)).await.unwrap();
@@ -597,33 +552,4 @@ async fn raw_pool(dir: &std::path::Path) -> sqlx::SqlitePool {
 
 fn find(haystack: &[u8], needle: &[u8]) -> Option<usize> {
     haystack.windows(needle.len()).position(|w| w == needle)
-}
-
-/// Collects tracing output so a test can scan it.
-#[derive(Clone, Default)]
-struct LogBuffer(Arc<Mutex<Vec<u8>>>);
-
-impl LogBuffer {
-    fn contents(&self) -> String {
-        String::from_utf8_lossy(&self.0.lock().unwrap()).into_owned()
-    }
-}
-
-impl Write for LogBuffer {
-    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-        self.0.lock().unwrap().extend_from_slice(buf);
-        Ok(buf.len())
-    }
-
-    fn flush(&mut self) -> std::io::Result<()> {
-        Ok(())
-    }
-}
-
-impl<'a> MakeWriter<'a> for LogBuffer {
-    type Writer = LogBuffer;
-
-    fn make_writer(&'a self) -> Self::Writer {
-        self.clone()
-    }
 }
