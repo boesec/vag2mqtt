@@ -324,10 +324,17 @@ async fn create_account_runs_the_full_flow_and_replies_after_commit() {
         VehicleDataState::Fresh
     )));
     assert!(h.db.secrets().account_session(&id).await.unwrap().is_some());
-    let status = h.handle.current_status();
-    assert_eq!(status.accounts.len(), 1);
-    assert!(status.accounts[0].running);
-    assert!(status.vehicles[0].last_state.is_some());
+    // The status snapshot is refreshed on the next event or tick; wait for it.
+    wait_for(T, || {
+        let status = h.handle.current_status();
+        status.accounts.len() == 1
+            && status.accounts[0].running
+            && status
+                .vehicles
+                .first()
+                .is_some_and(|v| v.last_state.is_some())
+    })
+    .await;
     h.handle.shutdown().await.unwrap();
 }
 
