@@ -85,4 +85,16 @@ their source under `Docs/reference/`.
 
 ## Licence
 
-Not decided yet. See `Docs/roadmap-items/WP-00-projekt-bootstrap.md`.
+[PolyForm Noncommercial License 1.0.0](LICENSE).
+
+Free for private use: your own cars at home, hobby projects, self study and
+experimenting, as well as for charities, schools, universities, public research
+and government institutions.
+
+Any use in or for a business needs a separate commercial licence. See
+[COMMERCIAL-LICENSE.md](COMMERCIAL-LICENSE.md) for where the line runs and how to
+ask for one.
+
+This makes VAG2MQTT source available, not open source in the OSI sense.
+
+Contributions are welcome under the terms in [CONTRIBUTING.md](CONTRIBUTING.md).

@@ -7,6 +7,7 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 publish = false
+license-file = "LICENSE"
 
 # Lints are defined once here and inherited by every crate via `[lints] workspace = true`.
 # CI runs clippy with `-D warnings`, so everything listed as `warn` fails the build there
