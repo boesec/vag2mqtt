@@ -1,10 +1,18 @@
 //! Masked trace files for diagnosing a broken login flow.
 //!
 //! Enabled by the `VAG2MQTT_AUDI_TRACE=<directory>` environment variable, off when it is absent.
-//! Nothing is written without it. Masking happens on the way out: header values of
-//! `Authorization`, `Cookie` and `Set-Cookie`, JSON and form fields whose name contains `token`
-//! or is `password`, `code_verifier`, `code` or `id_token`, anything shaped like a VIN, and the
-//! account's user name.
+//! Nothing is written without it. Masking happens on the way out and covers four places a secret
+//! can sit:
+//!
+//! - header values of `Authorization`, `Cookie` and `Set-Cookie`, wholesale;
+//! - fields of a JSON body or a form body, by name;
+//! - query and fragment parameters of URLs, including the `Location` header, which carries the
+//!   authorization code;
+//! - `name: "value"` pairs of JSON or JavaScript **embedded in an HTML page**, because the
+//!   sign-in pages keep their `hmac`, CSRF token and relay state in a `window._IDK` script block.
+//!
+//! On top of that, anything shaped like a VIN and the account's user name are replaced wherever
+//! they appear. See [`is_secret_field`] for which names count as secret.
 
 use std::path::{Path, PathBuf};
 
@@ -242,15 +250,18 @@ pub(crate) fn mask_header(name: &str, value: &str) -> String {
 }
 
 /// `true` for field names whose values are secrets.
+///
+/// `relaystate` and the CSRF names are in here although they are not credentials: they bind one
+/// login attempt to one session, and a trace file is meant to be shareable.
 pub(crate) fn is_secret_field(name: &str) -> bool {
     let lower = name.to_ascii_lowercase();
     lower.contains("token")
+        || lower.contains("csrf")
         || lower == "password"
         || lower == "code_verifier"
         || lower == "code"
-        || lower == "id_token"
         || lower == "hmac"
-        || lower == "_csrf"
+        || lower == "relaystate"
         || lower == "client_secret"
         || lower == "authorization"
 }
@@ -275,9 +286,10 @@ pub(crate) fn mask_body(body: &str, username: &str) -> String {
     mask_text(&masked, username)
 }
 
-/// Masks VIN shapes, the user name, and secret query parameters in URLs or fragments.
+/// Masks VIN shapes, the user name, secret query parameters in URLs or fragments, and
+/// `name: "value"` pairs of embedded JSON or JavaScript.
 pub(crate) fn mask_text(text: &str, username: &str) -> String {
-    let mut out = mask_query_params(text);
+    let mut out = mask_secret_pairs(&mask_query_params(text));
     if !username.is_empty() {
         out = out.replace(username, "[USERNAME]");
         let encoded = form_encode(username);
@@ -316,6 +328,61 @@ fn mask_form(body: &str) -> String {
         })
         .collect::<Vec<_>>()
         .join("&")
+}
+
+/// Masks `name: "value"` and `"name": "value"` pairs whose name denotes a secret.
+///
+/// The sign-in pages carry their form state in a `window._IDK = {...}` script block, so the
+/// `hmac`, the CSRF token and the relay state sit inside HTML where neither the JSON masker nor
+/// the form masker looks. Over-masking is deliberate: a value that is not a secret costs a line
+/// of debugging, a secret that is not masked costs a leak.
+fn mask_secret_pairs(text: &str) -> String {
+    let bytes = text.as_bytes();
+    let mut out = String::with_capacity(text.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] != b':' {
+            let ch = text[i..].chars().next().unwrap_or('\0');
+            out.push(ch);
+            i += ch.len_utf8();
+            continue;
+        }
+        let mut cursor = i + 1;
+        while matches!(bytes.get(cursor), Some(b' ' | b'\t')) {
+            cursor += 1;
+        }
+        let quote = bytes.get(cursor).copied();
+        if let (Some(key), Some(delimiter @ (b'"' | b'\''))) = (trailing_key(&out), quote)
+            && is_secret_field(&key)
+            && let Some(offset) = text[cursor + 1..].find(delimiter as char)
+        {
+            out.push_str(&text[i..cursor]);
+            out.push(delimiter as char);
+            out.push_str("[REDACTED]");
+            out.push(delimiter as char);
+            i = cursor + 1 + offset + 1;
+            continue;
+        }
+        out.push(':');
+        i += 1;
+    }
+    out
+}
+
+/// The identifier `text` ends with, ignoring one trailing quote, so both `hmac` and `"hmac"`
+/// are recognised as the key of the colon that follows.
+fn trailing_key(text: &str) -> Option<String> {
+    let trimmed = text.strip_suffix('"').unwrap_or(text);
+    let mut start = trimmed.len();
+    for (index, ch) in trimmed.char_indices().rev() {
+        if ch.is_alphanumeric() || ch == '_' || ch == '-' {
+            start = index;
+        } else {
+            break;
+        }
+    }
+    let key = &trimmed[start..];
+    (!key.is_empty()).then(|| key.to_string())
 }
 
 /// Masks `code=`, `*token*=` and friends inside URLs, fragments and HTML attribute values.
@@ -408,7 +475,7 @@ mod tests {
 
     #[test]
     fn every_marker_is_masked() {
-        let request_body = "email=driver%40example.test&password=hunter2-MARKER&_csrf=CSRF-MARKER&hmac=HMAC-MARKER&relayState=keep";
+        let request_body = "email=driver%40example.test&password=hunter2-MARKER&_csrf=CSRF-MARKER&hmac=HMAC-MARKER&relayState=RELAY-MARKER&registerFlow=false";
         let response_body = r#"{"access_token":"ACCESS-MARKER","refresh_token":"REFRESH-MARKER","id_token":"ID-MARKER","vehicles":[{"vin":"WAUZZZ1234567TEST"}],"expires_in":3600}"#;
         let url = "myaudi:///#state=abc&code=CODE-MARKER&id_token=ID-MARKER&x=1";
         let html = "<a href=\"https://x/cb?code=CODE-MARKER&amp;state=1\">driver@example.test WAUZZZ1234567TEST</a>";
@@ -424,6 +491,7 @@ mod tests {
             "hunter2",
             "CSRF-MARKER",
             "HMAC-MARKER",
+            "RELAY-MARKER",
             "ACCESS-MARKER",
             "REFRESH-MARKER",
             "ID-MARKER",
@@ -444,7 +512,11 @@ mod tests {
                 assert!(!text.contains(marker), "{marker} survived in {text}");
             }
         }
-        assert!(masked_request.contains("relayState=keep"));
+        // Fields that are not secrets stay readable.
+        assert!(
+            masked_request.contains("registerFlow=false"),
+            "{masked_request}"
+        );
         assert!(masked_response.contains("\"expires_in\": 3600"));
         assert!(masked_url.contains("state=abc"));
         assert!(masked_html.contains("[VIN]"));
@@ -455,6 +527,24 @@ mod tests {
             USERNAME,
         );
         assert!(!location.contains("CODE-MARKER"), "{location}");
+    }
+
+    /// The sign-in pages carry their state in a script block, not in a JSON body or a form.
+    #[test]
+    fn secrets_embedded_in_a_script_block_are_masked() {
+        let page = "<script>window._IDK = {\n  \
+                    templateModel: {\"hmac\":\"HMAC-MARKER\",\"relayState\":\"RELAY-MARKER\",\
+                    \"template\":\"loginAuthenticate\",\"postAction\":\"login/authenticate\"},\n  \
+                    csrf_token: 'CSRF-MARKER',\n  \
+                    baseUrl: 'https://identity.example.test'\n};</script>";
+        let masked = mask_body(page, USERNAME);
+        for marker in ["HMAC-MARKER", "RELAY-MARKER", "CSRF-MARKER"] {
+            assert!(!masked.contains(marker), "{marker} survived in {masked}");
+        }
+        // What is not a secret stays readable, or the file is useless for diagnosis.
+        assert!(masked.contains("loginAuthenticate"), "{masked}");
+        assert!(masked.contains("login/authenticate"), "{masked}");
+        assert!(masked.contains("https://identity.example.test"), "{masked}");
     }
 
     #[test]

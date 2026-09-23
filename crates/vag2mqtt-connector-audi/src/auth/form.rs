@@ -194,11 +194,22 @@ pub fn scrape_idk_form(html: &str, client_id: &str, action_path: &str) -> Option
     if let Some(csrf) = javascript_string_field(block, "csrf_token") {
         fields.insert("_csrf".to_string(), csrf);
     }
-    let action = template
-        .post_action
-        .unwrap_or_else(|| format!("/signin-service/v1/{client_id}{action_path}"));
+    let action = match template.post_action {
+        // The live service sends `"postAction":"login/authenticate"`, relative to the client's
+        // sign-in root and **not** to the page URL. Resolving it against the page, whose path
+        // already ends in `/login/authenticate`, produces `/login/login/authenticate` and a
+        // HTTP 400. Observed on 2026-09-23; see `Docs/reference/audi-auth.md` section 1b.
+        Some(action) if is_absolute_action(&action) => action,
+        Some(relative) => format!("/signin-service/v1/{client_id}/{relative}"),
+        None => format!("/signin-service/v1/{client_id}{action_path}"),
+    };
     let _ = template.email_password_form;
     Some(ScrapedForm { action, fields })
+}
+
+/// `true` for an action that already names its own place: an absolute path or a full URL.
+fn is_absolute_action(action: &str) -> bool {
+    action.starts_with('/') || action.contains("://")
 }
 
 /// Reads `name: VALUE` out of a JavaScript object literal, where VALUE is a quoted string.
@@ -501,6 +512,18 @@ impl FormLoginStrategy {
             .post_form(Step::PasswordPost, action, &[], &fields, trace)
             .await?;
         self.check_known_errors(&posted)?;
+        // An error here belongs to the password post, not to the chase that would follow it.
+        // Naming the wrong step sent the 2026-09-23 spike looking in the wrong place.
+        if !posted.is_redirect() && !posted.status.is_success() {
+            trace.outcome(
+                Step::PasswordPost,
+                &format!(
+                    "HTTP {} where a redirect was expected",
+                    posted.status.as_u16()
+                ),
+            );
+            return Err(self.unexpected(Step::PasswordPost, &posted));
+        }
 
         // Step 5: chase redirects until the app callback.
         let callback = self.chase_to_callback(http, posted, trace).await?;
@@ -910,6 +933,67 @@ mod tests {
 
         // No CAPTCHA and no second factor on the page the service serves today.
         assert_eq!(classify_challenge_page(&html), None);
+    }
+
+    /// The password page the service really served on 2026-09-23, anonymised.
+    ///
+    /// It renders its form by script, and its `postAction` is relative to the client's sign-in
+    /// root rather than to the page URL. Resolving it against the page produced
+    /// `/login/login/authenticate` and a HTTP 400; this test pins the fix.
+    #[test]
+    fn the_live_password_page_resolves_its_action_correctly() {
+        let html = fixture("live_signin_password_2026-09-23.html");
+        assert!(
+            scrape_form(&html, &["credentialsForm"], "/login/authenticate").is_none(),
+            "the live password page carries no form element at all"
+        );
+
+        let form = scrape_idk_form(
+            &html,
+            "09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com",
+            "/login/authenticate",
+        )
+        .expect("the _IDK fallback carries the password page");
+        assert_eq!(
+            form.action,
+            "/signin-service/v1/09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com/login/authenticate",
+            "a relative postAction resolves against the sign-in root, not against the page"
+        );
+        assert_eq!(
+            form.fields.get("hmac").map(String::as_str),
+            Some("hmac-live-fixture")
+        );
+        assert_eq!(
+            form.fields.get("relayState").map(String::as_str),
+            Some("relay-live-fixture")
+        );
+        assert_eq!(
+            form.fields.get("_csrf").map(String::as_str),
+            Some("csrf-live-fixture")
+        );
+
+        // And the resolved URL is the one the service accepts, not the doubled path.
+        let page_url = Url::parse(
+            "https://identity.vwgroup.io/signin-service/v1/09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com/login/authenticate",
+        )
+        .expect("valid page url");
+        let resolved = resolve_location(&page_url, &form.action).expect("resolves");
+        assert_eq!(
+            resolved.path(),
+            "/signin-service/v1/09b6cbec-cd19-4589-82fd-363dfa8c24da@apps_vw-dilab_com/login/authenticate"
+        );
+        assert!(!resolved.path().contains("/login/login/"), "{resolved}");
+
+        assert_eq!(classify_challenge_page(&html), None);
+    }
+
+    #[test]
+    fn an_absolute_post_action_is_left_alone() {
+        assert!(is_absolute_action(
+            "/signin-service/v1/x/login/authenticate"
+        ));
+        assert!(is_absolute_action("https://identity.example.test/x"));
+        assert!(!is_absolute_action("login/authenticate"));
     }
 
     #[test]
