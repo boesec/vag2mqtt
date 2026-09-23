@@ -23,6 +23,13 @@ use crate::trace::Trace;
 const LOG: &str = "vag2mqtt::auth";
 const MAX_HOPS: usize = 12;
 
+/// The hybrid flow: the callback fragment carries the tokens, so no exchange is needed.
+/// Advertised by the service's own discovery document under `response_types_supported`.
+pub const HYBRID_RESPONSE_TYPE: &str = "code token id_token";
+
+/// The classic flow: the callback carries a code that has to be exchanged.
+pub const CODE_RESPONSE_TYPE: &str = "code";
+
 /// The hosts and OAuth parameters of the flow. Tests point the hosts at a mock server.
 #[derive(Clone, Debug)]
 pub struct Endpoints {
@@ -38,6 +45,13 @@ pub struct Endpoints {
     pub scope: String,
     /// The `x-client-id` header the backend expects.
     pub x_client_id: String,
+    /// The OAuth `response_type`.
+    ///
+    /// `code token id_token` is the hybrid flow, which hands the tokens back in the callback
+    /// fragment and needs no token exchange. `code` alone is the classic flow, which does; the
+    /// Cariad backend rejects that one for third parties (see `Docs/reference/audi-auth.md`
+    /// section 1c), so it is kept only for diagnosis.
+    pub response_type: String,
 }
 
 impl Default for Endpoints {
@@ -51,6 +65,7 @@ impl Default for Endpoints {
             redirect_uri: "myaudi:///".into(),
             scope: "openid profile badge cars dealers vin".into(),
             x_client_id: "59edf286-a9ca-4d34-9421-68da00f72dc8".into(),
+            response_type: HYBRID_RESPONSE_TYPE.into(),
         }
     }
 }
@@ -280,19 +295,88 @@ fn balanced_json(text: &str) -> Option<&str> {
     None
 }
 
-/// Reads the authorization code from the app callback URL (`myaudi:///#code=...` or `?code=`).
-pub fn code_from_callback(callback: &str) -> Option<String> {
+/// Every parameter of the app callback URL, from both the fragment and the query.
+///
+/// The classic flow answers in the query (`myaudi:///?code=...`), the hybrid flow in the
+/// fragment (`myaudi:///#access_token=...&id_token=...`). Reading both means the parser does not
+/// have to know which flow produced the callback.
+pub fn callback_params(callback: &str) -> BTreeMap<String, String> {
     let after_scheme = callback
         .split_once("://")
         .map(|(_, rest)| rest)
         .unwrap_or(callback);
-    let params = after_scheme
-        .split_once('#')
-        .map(|(_, f)| f)
-        .or_else(|| after_scheme.split_once('?').map(|(_, q)| q))?;
-    params.split('&').find_map(|pair| {
-        let (key, value) = pair.split_once('=')?;
-        (key == "code" && !value.is_empty()).then(|| value.to_string())
+    let mut params = BTreeMap::new();
+    let (before_fragment, fragment) = match after_scheme.split_once('#') {
+        Some((before, fragment)) => (before, Some(fragment)),
+        None => (after_scheme, None),
+    };
+    let query = before_fragment.split_once('?').map(|(_, q)| q);
+    for part in [query, fragment].into_iter().flatten() {
+        for pair in part.split('&') {
+            if let Some((key, value)) = pair.split_once('=')
+                && !value.is_empty()
+            {
+                params.insert(key.to_string(), percent_decode(value));
+            }
+        }
+    }
+    params
+}
+
+/// Decodes `%XX` escapes and `+`. Tokens are base64url and need no decoding, but a `redirect_uri`
+/// echoed back does.
+fn percent_decode(value: &str) -> String {
+    let bytes = value.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        match bytes[i] {
+            b'%' if i + 2 < bytes.len() => match u8::from_str_radix(&value[i + 1..i + 3], 16) {
+                Ok(byte) => {
+                    out.push(byte);
+                    i += 3;
+                }
+                Err(_) => {
+                    out.push(bytes[i]);
+                    i += 1;
+                }
+            },
+            b'+' => {
+                out.push(b' ');
+                i += 1;
+            }
+            byte => {
+                out.push(byte);
+                i += 1;
+            }
+        }
+    }
+    String::from_utf8_lossy(&out).into_owned()
+}
+
+/// Reads the authorization code from the app callback URL.
+pub fn code_from_callback(callback: &str) -> Option<String> {
+    callback_params(callback).remove("code")
+}
+
+/// Builds tokens from a hybrid flow callback, if it carries an access token.
+///
+/// The fragment has no refresh token: renewing would need the token endpoint, which accepts
+/// only `client_secret_basic` or `client_secret_post`.
+pub fn tokens_from_callback(callback: &str, strategy: &str) -> Option<AudiTokens> {
+    let params = callback_params(callback);
+    let access = params.get("access_token")?;
+    let expires_in = params
+        .get("expires_in")
+        .and_then(|v| v.parse::<i64>().ok())
+        .unwrap_or(3600)
+        .max(60);
+    Some(AudiTokens {
+        access: Secret::new(access.clone()),
+        refresh: params.get("refresh_token").cloned().map(Secret::new),
+        id_token: params.get("id_token").cloned().map(Secret::new),
+        expires_at: Utc::now() + ChronoDuration::seconds(expires_in),
+        strategy: strategy.to_string(),
     })
 }
 
@@ -329,8 +413,7 @@ pub fn parse_token_response(
     let refresh = response
         .refresh_token
         .map(Secret::new)
-        .or_else(|| previous_refresh.cloned())
-        .ok_or_else(|| parsing(Step::TokenExchange))?;
+        .or_else(|| previous_refresh.cloned());
     let expires_in = response.expires_in.unwrap_or(3600).max(60);
     Ok(AudiTokens {
         access: Secret::new(access),
@@ -374,11 +457,20 @@ impl AudiAuthStrategy for FormLoginStrategy {
         tokens: &AudiTokens,
         trace: &mut Trace,
     ) -> Result<AudiTokens, ConnectorError> {
+        let Some(refresh_token) = &tokens.refresh else {
+            // The hybrid flow yields no refresh token, so the runtime has to log in again. It
+            // does exactly that on `SessionExpired`, with the stored password (WP-05).
+            tracing::info!(
+                target: LOG,
+                "this session has no refresh token; a new login is needed"
+            );
+            return Err(ConnectorError::SessionExpired);
+        };
         let form = vec![
             ("grant_type".to_string(), "refresh_token".to_string()),
             (
                 "refresh_token".to_string(),
-                tokens.refresh.expose_secret().clone(),
+                refresh_token.expose_secret().clone(),
             ),
             ("client_id".to_string(), self.endpoints.client_id.clone()),
         ];
@@ -396,7 +488,7 @@ impl AudiAuthStrategy for FormLoginStrategy {
             )
             .await?;
         let result = if exchange.status.is_success() {
-            parse_token_response(&exchange.body, self.name(), Some(&tokens.refresh))
+            parse_token_response(&exchange.body, self.name(), tokens.refresh.as_ref())
         } else if exchange.status.is_server_error() {
             Err(manufacturer(exchange.status.as_u16(), None))
         } else {
@@ -427,7 +519,7 @@ impl FormLoginStrategy {
         let mut authorize = self.endpoints.authorize();
         authorize
             .query_pairs_mut()
-            .append_pair("response_type", "code")
+            .append_pair("response_type", &self.endpoints.response_type)
             .append_pair("client_id", &self.endpoints.client_id)
             .append_pair("redirect_uri", &self.endpoints.redirect_uri)
             .append_pair("scope", &self.endpoints.scope)
@@ -529,9 +621,16 @@ impl FormLoginStrategy {
         let callback = self.chase_to_callback(http, posted, trace).await?;
         trace.outcome(Step::RedirectChase, "reached the app callback");
 
-        // Step 6: the code.
+        // Step 6: what the callback carries.
+        if let Some(tokens) = tokens_from_callback(&callback, self.name()) {
+            trace.outcome(
+                Step::Callback,
+                "tokens received in the callback (hybrid flow), no exchange needed",
+            );
+            return Ok(tokens);
+        }
         let code = code_from_callback(&callback).ok_or_else(|| parsing(Step::Callback))?;
-        trace.outcome(Step::Callback, "authorization code received");
+        trace.outcome(Step::Callback, "authorization code received, exchanging it");
 
         // Step 7: tokens.
         let form = vec![
@@ -841,21 +940,82 @@ mod tests {
     }
 
     #[test]
+    fn callback_parameters_come_from_query_and_fragment() {
+        let hybrid = "myaudi:///#state=abc&code=C&access_token=A&id_token=I&expires_in=3600&token_type=bearer";
+        let params = callback_params(hybrid);
+        assert_eq!(params.get("access_token").map(String::as_str), Some("A"));
+        assert_eq!(params.get("id_token").map(String::as_str), Some("I"));
+        assert_eq!(params.get("code").map(String::as_str), Some("C"));
+        assert_eq!(params.get("expires_in").map(String::as_str), Some("3600"));
+
+        // The classic flow answers in the query, which is what the service sent on 2026-09-23.
+        let classic = "myaudi:///?state=ae2d&code=C";
+        assert_eq!(
+            callback_params(classic).get("code").map(String::as_str),
+            Some("C")
+        );
+
+        // Empty values are not parameters, and escapes are decoded.
+        let odd = "myaudi:///?a=&b=x%20y&c=p+q";
+        let params = callback_params(odd);
+        assert!(!params.contains_key("a"));
+        assert_eq!(params.get("b").map(String::as_str), Some("x y"));
+        assert_eq!(params.get("c").map(String::as_str), Some("p q"));
+    }
+
+    #[test]
+    fn hybrid_callback_yields_tokens_without_an_exchange() {
+        let callback = "myaudi:///#state=abc&access_token=ACCESS&id_token=ID&expires_in=1800&token_type=bearer";
+        let tokens = tokens_from_callback(callback, "form").expect("the fragment carries tokens");
+        assert_eq!(tokens.access.expose_secret(), "ACCESS");
+        assert_eq!(
+            tokens.id_token.as_ref().map(|t| t.expose_secret().as_str()),
+            Some("ID")
+        );
+        assert!(
+            tokens.refresh.is_none(),
+            "the hybrid flow yields no refresh token"
+        );
+        let lifetime = tokens.expires_at - Utc::now();
+        assert!(lifetime.num_seconds() > 1700 && lifetime.num_seconds() <= 1800);
+
+        // A callback with only a code is not a hybrid answer.
+        assert!(tokens_from_callback("myaudi:///?code=C&state=1", "form").is_none());
+    }
+
+    #[test]
+    fn the_default_response_type_is_the_hybrid_one() {
+        assert_eq!(Endpoints::default().response_type, HYBRID_RESPONSE_TYPE);
+        assert_eq!(HYBRID_RESPONSE_TYPE, "code token id_token");
+        assert_eq!(CODE_RESPONSE_TYPE, "code");
+    }
+
+    #[test]
     fn token_response_is_parsed_and_errors_surface() {
         let tokens = parse_token_response(&fixture("token_response.json"), "form", None).unwrap();
         assert_eq!(tokens.access.expose_secret(), "access-fixture");
-        assert_eq!(tokens.refresh.expose_secret(), "refresh-fixture");
+        assert_eq!(
+            tokens.refresh.as_ref().map(|t| t.expose_secret().as_str()),
+            Some("refresh-fixture")
+        );
         assert!(tokens.id_token.is_some());
         assert!(tokens.expires_at > Utc::now() + ChronoDuration::seconds(3000));
 
+        // A response without a refresh token is fine; the runtime logs in again when the
+        // access token expires.
         let without_refresh = r#"{"access_token":"a","expires_in":100}"#;
-        assert!(matches!(
-            parse_token_response(without_refresh, "form", None),
-            Err(ConnectorError::Parsing { .. })
-        ));
+        assert!(
+            parse_token_response(without_refresh, "form", None)
+                .unwrap()
+                .refresh
+                .is_none()
+        );
         let previous = Secret::new("old-refresh".to_string());
         let kept = parse_token_response(without_refresh, "form", Some(&previous)).unwrap();
-        assert_eq!(kept.refresh.expose_secret(), "old-refresh");
+        assert_eq!(
+            kept.refresh.as_ref().map(|t| t.expose_secret().as_str()),
+            Some("old-refresh")
+        );
 
         let error = parse_token_response(
             r#"{"error":"invalid_grant","error_description":"x"}"#,

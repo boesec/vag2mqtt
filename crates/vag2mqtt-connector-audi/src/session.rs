@@ -12,8 +12,12 @@ pub(crate) const REFRESH_MARGIN_SECS: i64 = 60;
 pub struct AudiTokens {
     /// The bearer token for API calls.
     pub access: Secret<String>,
-    /// The refresh token.
-    pub refresh: Secret<String>,
+    /// The refresh token, when the flow yields one.
+    ///
+    /// The hybrid flow does not: renewing needs the token endpoint, and that endpoint accepts
+    /// only `client_secret_basic` or `client_secret_post`, which a public client cannot serve.
+    /// `None` therefore means "a full login is the only way to renew".
+    pub refresh: Option<Secret<String>>,
     /// The OpenID Connect identity token, if the backend delivered one.
     pub id_token: Option<Secret<String>>,
     /// When the access token expires.
@@ -40,7 +44,7 @@ impl AudiTokens {
     pub fn into_session(self) -> SessionState {
         let payload = serde_json::json!({
             "access_token": self.access.expose_secret(),
-            "refresh_token": self.refresh.expose_secret(),
+            "refresh_token": self.refresh.as_ref().map(|t| t.expose_secret().clone()),
             "id_token": self.id_token.as_ref().map(|t| t.expose_secret().clone()),
             "expires_at": self.expires_at.to_rfc3339(),
             "strategy": self.strategy,
@@ -73,7 +77,7 @@ impl AudiTokens {
             .map_err(|_| parsing())?;
         Ok(Self {
             access: Secret::new(string("access_token")?),
-            refresh: Secret::new(string("refresh_token")?),
+            refresh: string("refresh_token").ok().map(Secret::new),
             id_token: payload
                 .get("id_token")
                 .and_then(|v| v.as_str())
@@ -93,7 +97,7 @@ mod tests {
         let expires_at = Utc::now() + chrono::Duration::hours(1);
         let tokens = AudiTokens {
             access: Secret::new("ACCESS-MARKER".into()),
-            refresh: Secret::new("REFRESH-MARKER".into()),
+            refresh: Some(Secret::new("REFRESH-MARKER".into())),
             id_token: None,
             expires_at,
             strategy: "form".into(),
@@ -106,10 +110,28 @@ mod tests {
         assert!(!format!("{session:?}").contains("MARKER"));
         let back = AudiTokens::from_session(&session).unwrap();
         assert_eq!(back.access.expose_secret(), "ACCESS-MARKER");
-        assert_eq!(back.refresh.expose_secret(), "REFRESH-MARKER");
+        assert_eq!(
+            back.refresh.as_ref().map(|t| t.expose_secret().as_str()),
+            Some("REFRESH-MARKER")
+        );
         assert_eq!(back.expires_at, expires_at);
         assert_eq!(back.strategy, "form");
         assert!(!format!("{back:?}").contains("MARKER"));
+    }
+
+    #[test]
+    fn a_session_without_a_refresh_token_round_trips() {
+        let tokens = AudiTokens {
+            access: Secret::new("ACCESS-MARKER".into()),
+            refresh: None,
+            id_token: None,
+            expires_at: Utc::now() + chrono::Duration::hours(1),
+            strategy: "form".into(),
+        };
+        let session = tokens.into_session();
+        let back = AudiTokens::from_session(&session).unwrap();
+        assert!(back.refresh.is_none(), "no refresh token survives as None");
+        assert_eq!(back.access.expose_secret(), "ACCESS-MARKER");
     }
 
     #[test]

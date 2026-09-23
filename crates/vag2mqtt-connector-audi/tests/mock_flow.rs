@@ -6,7 +6,7 @@ use std::sync::Arc;
 
 use url::Url;
 use vag2mqtt_connector_api::{Connector, ConnectorError, Credentials, ErrorClass};
-use vag2mqtt_connector_audi::auth::form::{Endpoints, FormLoginStrategy};
+use vag2mqtt_connector_audi::auth::form::{CODE_RESPONSE_TYPE, Endpoints, FormLoginStrategy};
 use vag2mqtt_connector_audi::{AudiConnector, AudiTokens, TraceConfig};
 use vag2mqtt_domain::Secret;
 use wiremock::matchers::{body_string_contains, method, path, query_param};
@@ -29,10 +29,20 @@ fn credentials() -> Credentials {
 }
 
 fn build_connector(server: &MockServer, trace: TraceConfig) -> AudiConnector {
+    // The mounted mocks answer the classic flow; the hybrid flow has its own test below.
+    build_connector_with(server, trace, CODE_RESPONSE_TYPE)
+}
+
+fn build_connector_with(
+    server: &MockServer,
+    trace: TraceConfig,
+    response_type: &str,
+) -> AudiConnector {
     let base = Url::parse(&server.uri()).unwrap();
     let endpoints = Endpoints {
         identity_base: base.clone(),
         bff_base: base,
+        response_type: response_type.to_string(),
         ..Endpoints::default()
     };
     AudiConnector::with_strategy(
@@ -49,6 +59,7 @@ async fn mount_flow(server: &MockServer, password_outcome: ResponseTemplate) {
         .and(path("/oidc/v1/authorize"))
         .and(query_param("code_challenge_method", "S256"))
         .and(query_param("client_id", CLIENT))
+        .and(query_param("response_type", CODE_RESPONSE_TYPE))
         .respond_with(ResponseTemplate::new(302).insert_header(
             "Location",
             format!("/signin-service/v1/signin/{CLIENT}@relayState=relay-fixture"),
@@ -363,7 +374,7 @@ async fn expired_session_is_renewed_through_refresh_without_a_password_login() {
     let connector = build_connector(&server, TraceConfig::disabled());
     let expired = AudiTokens {
         access: Secret::new("old-access".into()),
-        refresh: Secret::new("REFRESH-MARKER".into()),
+        refresh: Some(Secret::new("REFRESH-MARKER".into())),
         id_token: None,
         expires_at: chrono::Utc::now() - chrono::Duration::minutes(5),
         strategy: "form".into(),
@@ -373,8 +384,8 @@ async fn expired_session_is_renewed_through_refresh_without_a_password_login() {
     let renewed = AudiTokens::from_session(&session).unwrap();
     assert_eq!(renewed.access.expose_secret(), "new-access");
     assert_eq!(
-        renewed.refresh.expose_secret(),
-        "REFRESH-MARKER",
+        renewed.refresh.as_ref().map(|t| t.expose_secret().as_str()),
+        Some("REFRESH-MARKER"),
         "kept when not repeated"
     );
     assert!(session.expires_at.unwrap() > chrono::Utc::now());
@@ -391,7 +402,7 @@ async fn rejected_refresh_is_session_expired() {
     let connector = build_connector(&server, TraceConfig::disabled());
     let mut session = AudiTokens {
         access: Secret::new("a".into()),
-        refresh: Secret::new("r".into()),
+        refresh: Some(Secret::new("r".into())),
         id_token: None,
         expires_at: chrono::Utc::now(),
         strategy: "form".into(),
@@ -477,4 +488,99 @@ async fn without_the_trace_variable_nothing_is_written() {
     let connector = build_connector(&server, TraceConfig::disabled());
     connector.login(&credentials()).await.unwrap();
     assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 0);
+}
+
+/// The hybrid flow: the callback fragment carries the tokens and the token endpoint is never
+/// touched. This is the route the 2026-09-23 spike showed to be necessary, because the Cariad
+/// backend refuses a third party's code exchange with `invalid assertion headers`.
+#[tokio::test]
+async fn hybrid_flow_takes_its_tokens_from_the_callback() {
+    let server = MockServer::start().await;
+    Mock::given(method("GET"))
+        .and(path("/oidc/v1/authorize"))
+        .and(query_param("response_type", "code token id_token"))
+        .and(query_param("code_challenge_method", "S256"))
+        .respond_with(
+            ResponseTemplate::new(302).insert_header("Location", "/signin-service/v1/signin/x"),
+        )
+        .mount(&server)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/signin-service/v1/signin/x"))
+        .respond_with(ResponseTemplate::new(200).set_body_string(fixture("signin_email_form.html")))
+        .mount(&server)
+        .await;
+    Mock::given(method("POST"))
+        .and(path(format!(
+            "/signin-service/v1/{CLIENT}/login/identifier"
+        )))
+        .respond_with(ResponseTemplate::new(303).insert_header("Location", "/password"))
+        .mount(&server)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/password"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_string(fixture("live_signin_password_2026-09-23.html")),
+        )
+        .mount(&server)
+        .await;
+    Mock::given(method("POST"))
+        .and(path(format!(
+            "/signin-service/v1/{CLIENT}/login/authenticate"
+        )))
+        .and(body_string_contains("password=hunter2-MARKER"))
+        .respond_with(ResponseTemplate::new(302).insert_header(
+            "Location",
+            "myaudi:///#state=abc&code=CODE-MARKER&access_token=ACCESS-MARKER\
+             &id_token=ID-MARKER&expires_in=3600&token_type=bearer",
+        ))
+        .mount(&server)
+        .await;
+    // The token endpoint must not be touched at all.
+    Mock::given(method("POST"))
+        .and(path("/auth/v1/idk/oidc/token"))
+        .respond_with(
+            ResponseTemplate::new(400).set_body_string(r#"{"error":"invalid assertion headers"}"#),
+        )
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let connector = build_connector_with(&server, TraceConfig::disabled(), "code token id_token");
+    let session = connector.login(&credentials()).await.unwrap();
+    let tokens = AudiTokens::from_session(&session).unwrap();
+    assert_eq!(tokens.access.expose_secret(), "ACCESS-MARKER");
+    assert!(
+        tokens.refresh.is_none(),
+        "the hybrid flow brings no refresh token"
+    );
+    assert!(session.expires_at.is_some());
+}
+
+/// Without a refresh token there is nothing to renew, so the connector says the session is gone
+/// and the runtime logs in again (WP-05 behaviour).
+#[tokio::test]
+async fn a_session_without_a_refresh_token_reports_session_expired() {
+    let server = MockServer::start().await;
+    Mock::given(method("POST"))
+        .and(path("/auth/v1/idk/oidc/token"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server)
+        .await;
+
+    let connector = build_connector(&server, TraceConfig::disabled());
+    let mut session = AudiTokens {
+        access: Secret::new("a".into()),
+        refresh: None,
+        id_token: None,
+        expires_at: chrono::Utc::now(),
+        strategy: "form".into(),
+    }
+    .into_session();
+    assert_eq!(
+        connector.refresh(&mut session).await.unwrap_err(),
+        ConnectorError::SessionExpired
+    );
 }
