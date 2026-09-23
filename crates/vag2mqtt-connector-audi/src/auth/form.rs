@@ -24,7 +24,11 @@ const LOG: &str = "vag2mqtt::auth";
 const MAX_HOPS: usize = 12;
 
 /// The hybrid flow: the callback fragment carries the tokens, so no exchange is needed.
-/// Advertised by the service's own discovery document under `response_types_supported`.
+///
+/// The service advertises it under `response_types_supported`, but the myAudi app client is not
+/// registered for it: the authorize request answers
+/// `400 {"error":"invalid_request","error_description":"invalid client"}` (2026-09-23). Kept
+/// because a differently registered client, such as the EU Data Act portal's, may accept it.
 pub const HYBRID_RESPONSE_TYPE: &str = "code token id_token";
 
 /// The classic flow: the callback carries a code that has to be exchanged.
@@ -47,10 +51,10 @@ pub struct Endpoints {
     pub x_client_id: String,
     /// The OAuth `response_type`.
     ///
-    /// `code token id_token` is the hybrid flow, which hands the tokens back in the callback
-    /// fragment and needs no token exchange. `code` alone is the classic flow, which does; the
-    /// Cariad backend rejects that one for third parties (see `Docs/reference/audi-auth.md`
-    /// section 1c), so it is kept only for diagnosis.
+    /// `code` is the classic flow and the only one this client is registered for. The hybrid
+    /// `code token id_token` would need no token exchange, but the authorize request rejects it
+    /// with `invalid client`. Both dead ends are recorded in `Docs/reference/audi-auth.md`
+    /// sections 1c and 1d.
     pub response_type: String,
 }
 
@@ -65,7 +69,7 @@ impl Default for Endpoints {
             redirect_uri: "myaudi:///".into(),
             scope: "openid profile badge cars dealers vin".into(),
             x_client_id: "59edf286-a9ca-4d34-9421-68da00f72dc8".into(),
-            response_type: HYBRID_RESPONSE_TYPE.into(),
+            response_type: CODE_RESPONSE_TYPE.into(),
         }
     }
 }
@@ -984,8 +988,10 @@ mod tests {
     }
 
     #[test]
-    fn the_default_response_type_is_the_hybrid_one() {
-        assert_eq!(Endpoints::default().response_type, HYBRID_RESPONSE_TYPE);
+    fn the_default_response_type_is_the_only_registered_one() {
+        // The hybrid flow is rejected with `invalid client` by this client id, so the classic
+        // flow stays the default even though its exchange is closed to us.
+        assert_eq!(Endpoints::default().response_type, CODE_RESPONSE_TYPE);
         assert_eq!(HYBRID_RESPONSE_TYPE, "code token id_token");
         assert_eq!(CODE_RESPONSE_TYPE, "code");
     }
