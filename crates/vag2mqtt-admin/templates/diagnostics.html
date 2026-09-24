@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Diagnostics – {{ label }} – VAG2MQTT{% endblock %}
+{% block content %}
+<h1>What this car reports</h1>
+<p><a href="/vehicles/{{ vin }}">{{ label }}</a> <code>{{ vin }}</code></p>
+
+{% if has_state %}
+  <p class="muted">Fetched {{ fetched_at }}.</p>
+
+  <div class="legend">
+    <span class="pill good">present</span> the car delivered a value
+    <span class="pill warn">unavailable</span> the car has this, but delivered nothing this time
+    <span class="pill muted">unsupported</span> the car does not have this at all
+  </div>
+
+  <p class="muted">
+    {{ present }} present, {{ unavailable }} unavailable, {{ unsupported }} unsupported.
+    Only present values are published; an unavailable one leaves the last retained value in place,
+    and an unsupported one is never published at all.
+  </p>
+
+  <table class="values">
+    <thead><tr><th>Category</th><th>State</th><th>Value</th><th>Source time</th></tr></thead>
+    <tbody>
+      {% for row in rows %}
+        <tr class="state-{{ row.state }}">
+          <td><code>{{ row.path }}</code></td>
+          <td><span class="pill {{ row.tone }}">{{ row.state }}</span></td>
+          <td class="number">{{ row.value }} {{ row.unit }}</td>
+          <td>{{ row.source_time }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p class="muted small">
+    The position is shown as present or not, without the coordinates: this project puts them on no
+    screen and in no log. The full snapshot, coordinates included, is available at
+    <code>/api/vehicles/{{ vin }}/state</code>.
+  </p>
+
+  <details>
+    <summary>Last raw manufacturer response</summary>
+    {% if has_raw %}
+      <pre class="raw">{{ raw }}</pre>
+    {% else %}
+      <p class="muted">
+        None stored. The connector that keeps raw responses is not built yet, because the native
+        Audi route is closed; see the work packages WP-07 and WP-25.
+      </p>
+    {% endif %}
+  </details>
+{% else %}
+  <p class="empty">
+    Nothing fetched yet, so there is nothing to show. This page fills up after the first
+    successful poll.
+  </p>
+{% endif %}
+{% endblock %}

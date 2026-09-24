@@ -39,6 +39,7 @@ vag2mqtt-runtime = { path = "crates/vag2mqtt-runtime" }
 # what it needs (reqwest, rumqttc, sqlx, axum, askama, chacha20poly1305, ...) so that no
 # unverified version constraints sit here unused.
 anyhow = "1"
+askama = "0.16"
 async-trait = "0.1"
 axum = { version = "0.8", features = ["macros"] }
 base64 = "0.22"

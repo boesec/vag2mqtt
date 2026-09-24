@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}VAG2MQTT{% endblock %}</title>
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="/assets/htmx.min.js" defer></script>
+</head>
+<body hx-boost="true">
+  <header class="bar">
+    <a class="brand" href="/">VAG2MQTT</a>
+    <nav>
+      <a href="/"{% if chrome.active == "overview" %} class="current"{% endif %}>Overview</a>
+      <a href="/mqtt"{% if chrome.active == "mqtt" %} class="current"{% endif %}>Broker</a>
+      <a href="/accounts/new"{% if chrome.active == "account_new" %} class="current"{% endif %}>Add account</a>
+    </nav>
+  </header>
+
+  <main>
+    {% if !chrome.error.is_empty() %}
+      <p class="banner bad" role="alert">{{ chrome.error }}</p>
+    {% endif %}
+    {% if !chrome.notice.is_empty() %}
+      <p class="banner good" role="status">{{ chrome.notice }}</p>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer>
+    <span>VAG2MQTT {{ chrome.version }}</span>
+    <span><a href="/api/openapi.yaml">API description</a></span>
+  </footer>
+</body>
+</html>

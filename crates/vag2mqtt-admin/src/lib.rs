@@ -14,8 +14,9 @@ pub mod api;
 pub mod dto;
 mod error;
 mod state;
+mod ui;
 
-pub use api::{ROUTES, RouteSpec, router};
+pub use api::{ROUTES, RouteSpec};
 pub use error::{ApiError, ErrorBody};
 pub use state::AppState;
 pub use state::COMMAND_TIMEOUT;
@@ -40,6 +41,14 @@ pub async fn serve(
     axum::serve(listener, router(state))
         .with_graceful_shutdown(shutdown)
         .await
+}
+
+/// The whole surface: the JSON API and the interface that renders it.
+///
+/// Both are one axum router, because the interface is served from the same origin and calls the
+/// runtime through the same handle. Keeping them apart would only add a network hop to itself.
+pub fn router(state: AppState) -> axum::Router {
+    api::router(state.clone()).merge(ui::router().with_state(state))
 }
 
 /// Warns once when the API is reachable from outside this machine.

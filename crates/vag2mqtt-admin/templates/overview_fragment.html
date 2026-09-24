@@ -1,0 +1,77 @@
+<section id="overview" hx-get="/fragments/overview" hx-trigger="every 5s" hx-swap="outerHTML">
+  <div class="cards">
+    <article class="card">
+      <h2>Service</h2>
+      <p class="big"><span class="pill {{ fragment.connected_tone }}">connected = {{ fragment.connected }}</span></p>
+      <p class="muted">{{ fragment.connected_meaning }}</p>
+      <dl>
+        <dt>Started</dt><dd>{{ fragment.started_at }}</dd>
+        <dt>Snapshot</dt><dd>{{ fragment.snapshot_at }}</dd>
+      </dl>
+    </article>
+
+    <article class="card">
+      <h2>Broker</h2>
+      {% if fragment.mqtt.configured %}
+        <p class="big">{{ fragment.mqtt.target }}</p>
+        <dl>
+          <dt>Prefix</dt><dd><code>{{ fragment.mqtt.prefix }}</code></dd>
+          <dt>Publishing</dt><dd>{% if fragment.mqtt.enabled %}on{% else %}off{% endif %}</dd>
+          <dt>Session</dt>
+          <dd>{% if fragment.mqtt.connected %}<span class="pill good">live</span>{% else %}<span class="pill bad">down</span>{% endif %}</dd>
+        </dl>
+      {% else %}
+        <p class="muted">No broker configured. Data is still fetched and stored.</p>
+        <p><a class="button" href="/mqtt">Configure a broker</a></p>
+      {% endif %}
+    </article>
+  </div>
+
+  <h2>Accounts</h2>
+  {% if fragment.accounts.is_empty() %}
+    <p class="empty">No account yet. <a href="/accounts/new">Add one</a> to start fetching.</p>
+  {% else %}
+    <table>
+      <thead>
+        <tr><th>Account</th><th>Brand</th><th>State</th><th>Last success</th><th>Next poll</th></tr>
+      </thead>
+      <tbody>
+        {% for account in fragment.accounts %}
+          <tr>
+            <td><a href="/accounts/{{ account.id }}">{{ account.username }}</a>
+              {% if !account.enabled %}<span class="pill muted">disabled</span>{% endif %}</td>
+            <td>{{ account.brand }}</td>
+            <td><span class="pill {{ account.tone }}">{{ account.state }}</span>
+              {% if !account.error.is_empty() %}<div class="muted small">{{ account.error }}</div>{% endif %}</td>
+            <td>{{ account.last_success }}</td>
+            <td>{{ account.next_poll }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  <h2>Vehicles</h2>
+  {% if fragment.vehicles.is_empty() %}
+    <p class="empty">No vehicle yet. They appear on their own once an account has logged in.</p>
+  {% else %}
+    <table>
+      <thead>
+        <tr><th>Vehicle</th><th>VIN</th><th>State</th><th>Last update</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for vehicle in fragment.vehicles %}
+          <tr>
+            <td><a href="/vehicles/{{ vehicle.vin }}">{{ vehicle.label }}</a>
+              {% if !vehicle.enabled %}<span class="pill muted">disabled</span>{% endif %}
+              {% if vehicle.missing %}<span class="pill bad">no longer listed</span>{% endif %}</td>
+            <td><code>{{ vehicle.vin }}</code></td>
+            <td><span class="pill {{ vehicle.tone }}">{{ vehicle.state }}</span></td>
+            <td>{{ vehicle.last_update }}</td>
+            <td><a href="/vehicles/{{ vehicle.vin }}/diagnostics">Diagnostics</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</section>

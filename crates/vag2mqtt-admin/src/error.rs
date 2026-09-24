@@ -62,6 +62,11 @@ impl ApiError {
         }
     }
 
+    /// The sentence the interface shows. The API's `message`, without the JSON around it.
+    pub fn user_message(self) -> String {
+        self.parts().1.message
+    }
+
     /// The status and body this error becomes.
     fn parts(self) -> (StatusCode, ErrorBody) {
         match self {

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Broker – VAG2MQTT{% endblock %}
+{% block content %}
+<h1>MQTT broker</h1>
+
+<p class="muted">
+  Values are published following the mqtt-smarthome conventions under the prefix below. Changing
+  anything here reconnects the publisher at once; no restart is needed.
+</p>
+
+<form method="post" action="/mqtt" class="stack">
+  <label>
+    Host
+    <input name="host" value="{{ host }}" required placeholder="192.168.1.10 or broker.local">
+  </label>
+
+  <label>
+    Port
+    <input name="port" type="number" min="1" max="65535" value="{{ port }}" required>
+  </label>
+
+  <label>
+    User name
+    <input name="username" value="{{ username }}" autocomplete="off" placeholder="leave empty if the broker needs none">
+  </label>
+
+  <label>
+    Password
+    <input name="password" type="password" autocomplete="new-password"
+           placeholder="{% if configured %}unchanged – type to replace it{% else %}leave empty if the broker needs none{% endif %}">
+    <small class="muted">Never shown again once stored. Leave empty to keep the current one.</small>
+  </label>
+
+  <label class="check">
+    <input name="tls" type="checkbox" value="true"{% if tls %} checked{% endif %}>
+    Connect with TLS
+  </label>
+
+  <label>
+    Topic prefix
+    <input name="topic_prefix" value="{{ topic_prefix }}" required>
+    <small class="muted">Everything is published below this, for example <code>{{ topic_prefix }}/status/&lt;VIN&gt;/battery/soc</code>.</small>
+  </label>
+
+  <label>
+    Client id
+    <input name="client_id" value="{{ client_id }}" placeholder="generated when empty">
+  </label>
+
+  <label>
+    Keep alive (seconds)
+    <input name="keep_alive_secs" type="number" min="1" value="{{ keep_alive_secs }}" required>
+  </label>
+
+  <label class="check">
+    <input name="enabled" type="checkbox" value="true"{% if enabled %} checked{% endif %}>
+    Publish to this broker
+  </label>
+
+  <div class="actions">
+    <button type="submit">Save and reconnect</button>
+    <a class="button quiet" href="/">Cancel</a>
+  </div>
+</form>
+
+{% if configured %}
+  <p class="muted">
+    Session right now:
+    {% if connected %}<span class="pill good">live</span>{% else %}<span class="pill bad">down</span>{% endif %}
+  </p>
+{% endif %}
+{% endblock %}

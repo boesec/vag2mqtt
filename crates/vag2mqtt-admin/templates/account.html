@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}{{ account.username }} – VAG2MQTT{% endblock %}
+{% block content %}
+<h1>{{ account.username }}</h1>
+
+<p>
+  <span class="pill {{ account.tone }}">{{ account.state }}</span>
+  <span class="muted">{{ account.brand }}</span>
+  {% if !account.enabled %}<span class="pill muted">disabled</span>{% endif %}
+  {% if !running %}<span class="pill muted">no task running</span>{% endif %}
+</p>
+
+<dl class="facts">
+  <dt>Last success</dt><dd>{{ account.last_success }}</dd>
+  <dt>Next poll</dt><dd>{{ account.next_poll }}</dd>
+  <dt>Consecutive failures</dt><dd>{{ consecutive_failures }}</dd>
+  <dt>Task restarts</dt><dd>{{ respawns }}</dd>
+</dl>
+
+{% if has_error %}
+  <section class="panel bad">
+    <h2>Last error</h2>
+    <dl class="facts">
+      <dt>When</dt><dd>{{ error_detail.at }}</dd>
+      <dt>Category</dt><dd><code>{{ error_detail.category }}</code></dd>
+      <dt>Message</dt><dd>{{ error_detail.message }}</dd>
+    </dl>
+    {% if account.state == "auth_error" %}
+      <p class="muted">
+        Polling stopped and will not resume on its own, so a wrong password cannot lock the
+        account. Change the password below, or try again once you are sure it is right.
+      </p>
+    {% endif %}
+  </section>
+{% endif %}
+
+<h2>Settings</h2>
+<form method="post" action="/accounts/{{ account.id }}" class="stack">
+  <label>
+    User name
+    <input name="username" value="{{ account.username }}" required autocomplete="username">
+  </label>
+  <label>
+    Polling interval (seconds)
+    <input name="polling_interval_secs" type="number" min="1" value="{{ polling_interval_secs }}" required>
+  </label>
+  <div class="actions"><button type="submit">Save</button></div>
+</form>
+
+<h2>Password</h2>
+<form method="post" action="/accounts/{{ account.id }}/credentials" class="stack">
+  <label>
+    New password
+    <input name="password" type="password" required autocomplete="new-password">
+    <small class="muted">Replaces the stored one, forgets the session and logs in again.</small>
+  </label>
+  <div class="actions"><button type="submit">Change password</button></div>
+</form>
+
+<h2>Actions</h2>
+<div class="actions">
+  <form method="post" action="/accounts/{{ account.id }}/enabled">
+    <input type="hidden" name="enabled" value="{% if account.enabled %}false{% else %}true{% endif %}">
+    <button type="submit">{% if account.enabled %}Disable{% else %}Enable{% endif %}</button>
+  </form>
+
+  <form method="post" action="/accounts/{{ account.id }}/reauthenticate">
+    <button type="submit">Try logging in again</button>
+  </form>
+
+  <form method="post" action="/accounts/{{ account.id }}/delete"
+        onsubmit="return confirm('Delete this account, its vehicles and their retained MQTT topics?')">
+    <button type="submit" class="danger">Delete account</button>
+  </form>
+</div>
+<p class="muted small">
+  Deleting removes the account, its vehicles and their stored data, and clears the retained topics
+  on the broker. Without JavaScript there is no confirmation dialogue, so the button acts at once.
+</p>
+
+<h2>Vehicles</h2>
+{% if vehicles.is_empty() %}
+  <p class="empty">None discovered yet.</p>
+{% else %}
+  <table>
+    <thead><tr><th>Vehicle</th><th>VIN</th><th>State</th><th>Last update</th></tr></thead>
+    <tbody>
+      {% for vehicle in vehicles %}
+        <tr>
+          <td><a href="/vehicles/{{ vehicle.vin }}">{{ vehicle.label }}</a></td>
+          <td><code>{{ vehicle.vin }}</code></td>
+          <td><span class="pill {{ vehicle.tone }}">{{ vehicle.state }}</span></td>
+          <td>{{ vehicle.last_update }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+{% endblock %}

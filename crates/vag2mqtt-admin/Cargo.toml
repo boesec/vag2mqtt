@@ -15,6 +15,7 @@ vag2mqtt-domain.workspace = true
 vag2mqtt-persistence.workspace = true
 vag2mqtt-runtime.workspace = true
 
+askama.workspace = true
 axum.workspace = true
 chrono.workspace = true
 serde.workspace = true

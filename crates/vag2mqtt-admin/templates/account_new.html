@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Add account – VAG2MQTT{% endblock %}
+{% block content %}
+<h1>Add an account</h1>
+
+<p class="muted">
+  Use the credentials of the manufacturer's own app. After saving, VAG2MQTT logs in, discovers the
+  vehicles on its own and starts fetching.
+</p>
+
+{% if brands.is_empty() %}
+  <p class="banner bad">This build has no connector compiled in, so no account can be added.</p>
+{% else %}
+<form method="post" action="/accounts" class="stack">
+  <label>
+    Brand
+    <select name="brand" required>
+      {% for brand in brands %}
+        <option value="{{ brand.value }}">{{ brand.label }}</option>
+      {% endfor %}
+    </select>
+  </label>
+
+  <label>
+    User name
+    <input name="username" value="{{ username }}" required autocomplete="username"
+           placeholder="the e-mail address of the manufacturer account">
+  </label>
+
+  <label>
+    Password
+    <input name="password" type="password" required autocomplete="new-password">
+    <small class="muted">Stored encrypted and never shown again.</small>
+  </label>
+
+  <label>
+    Polling interval (seconds)
+    <input name="polling_interval_secs" type="number" min="1" value="{{ polling_interval_secs }}" required>
+    <small class="muted">
+      Refused below what the connector allows. Fetching too often risks a lockout that would also
+      break the manufacturer's own app.
+    </small>
+  </label>
+
+  <div class="actions">
+    <button type="submit">Add and log in</button>
+    <a class="button quiet" href="/">Cancel</a>
+  </div>
+</form>
+{% endif %}
+{% endblock %}

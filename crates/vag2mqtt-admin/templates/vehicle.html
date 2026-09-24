@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}{{ vehicle.label }} – VAG2MQTT{% endblock %}
+{% block content %}
+<h1>{{ vehicle.label }}</h1>
+
+<p>
+  <span class="pill {{ vehicle.tone }}">{{ vehicle.state }}</span>
+  <code>{{ vehicle.vin }}</code>
+  {% if !vehicle.enabled %}<span class="pill muted">disabled</span>{% endif %}
+  {% if vehicle.missing %}<span class="pill bad">no longer listed</span>{% endif %}
+</p>
+
+{% if vehicle.missing %}
+  <p class="banner bad">
+    The manufacturer stopped listing this vehicle on {{ missing_since }}. It is kept and no longer
+    polled, so nothing is lost by accident. Delete it below once you are sure it is gone.
+  </p>
+{% endif %}
+
+<dl class="facts">
+  <dt>Model</dt><dd>{{ model }}</dd>
+  <dt>Drivetrain</dt><dd>{{ drivetrain }}</dd>
+  <dt>Account</dt><dd><a href="/accounts/{{ account_id }}">{{ account_id }}</a></dd>
+  <dt>Last update</dt><dd>{{ vehicle.last_update }}</dd>
+</dl>
+
+{% if has_error %}
+  <section class="panel bad">
+    <h2>Last error</h2>
+    <dl class="facts">
+      <dt>When</dt><dd>{{ error_detail.at }}</dd>
+      <dt>Category</dt><dd><code>{{ error_detail.category }}</code></dd>
+      <dt>Message</dt><dd>{{ error_detail.message }}</dd>
+    </dl>
+  </section>
+{% endif %}
+
+<h2>Current values</h2>
+{% if has_state %}
+  <table class="values">
+    <thead><tr><th>Value</th><th>State</th><th>Reading</th><th>Source time</th></tr></thead>
+    <tbody>
+      {% for row in highlights %}
+        <tr>
+          <td><code>{{ row.path }}</code></td>
+          <td><span class="pill {{ row.tone }}">{{ row.state }}</span></td>
+          <td class="number">{{ row.value }} {{ row.unit }}</td>
+          <td>{{ row.source_time }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p><a href="/vehicles/{{ vehicle.vin }}/diagnostics">See everything this car reports</a></p>
+{% else %}
+  <p class="empty">Nothing fetched yet. Values appear after the first successful poll.</p>
+{% endif %}
+
+<h2>Settings</h2>
+<form method="post" action="/vehicles/{{ vehicle.vin }}" class="stack">
+  <label>
+    Display name
+    <input name="display_name" value="{{ display_name }}" placeholder="{{ model }}">
+    <small class="muted">Leave empty to fall back to the model, or failing that the VIN.</small>
+  </label>
+  <div class="actions"><button type="submit">Save</button></div>
+</form>
+
+<h2>Actions</h2>
+<div class="actions">
+  <form method="post" action="/vehicles/{{ vehicle.vin }}/enabled">
+    <input type="hidden" name="enabled" value="{% if vehicle.enabled %}false{% else %}true{% endif %}">
+    <button type="submit">{% if vehicle.enabled %}Disable{% else %}Enable{% endif %}</button>
+  </form>
+
+  <form method="post" action="/vehicles/{{ vehicle.vin }}/refresh">
+    <button type="submit">Fetch now</button>
+  </form>
+
+  <form method="post" action="/vehicles/{{ vehicle.vin }}/delete"
+        onsubmit="return confirm('Delete this vehicle and clear its retained MQTT topics?')">
+    <button type="submit" class="danger">Delete vehicle</button>
+  </form>
+</div>
+<p class="muted small">
+  A vehicle the manufacturer still lists comes back at the next discovery. Disable it instead if
+  you only want it to stop being polled.
+</p>
+{% endblock %}
