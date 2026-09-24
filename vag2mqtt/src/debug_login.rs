@@ -40,6 +40,7 @@ pub(crate) async fn run(args: DebugLogin) -> Result<()> {
     println!("vag2mqtt debug-login");
     println!("  brand      {:?}", args.brand);
     println!("  strategy   {}", connector.strategy_name());
+    println!("  source     {:?}", connector.info().kind);
     println!(
         "  trace      {}",
         if trace.is_enabled() {
@@ -59,7 +60,7 @@ pub(crate) async fn run(args: DebugLogin) -> Result<()> {
     }
 }
 
-/// Prints the outcome. Tokens are never printed, only their lifetime.
+/// Prints the outcome. Session secrets (tokens or cookies) are never printed, only their shape.
 fn report(outcome: &Result<vag2mqtt_connector_api::SessionState, ConnectorError>) {
     match outcome {
         Ok(session) => {
@@ -73,9 +74,11 @@ fn report(outcome: &Result<vag2mqtt_connector_api::SessionState, ConnectorError>
                         expiry.to_rfc3339()
                     );
                 }
-                None => println!("  the backend named no expiry"),
+                None => println!(
+                    "  the session names no expiry; it is renewed by logging in again when refused"
+                ),
             }
-            println!("  no token is printed; it stays in memory and is discarded on exit");
+            println!("  no session secret is printed; it stays in memory and is discarded on exit");
         }
         Err(error) => {
             println!("RESULT  failure");
@@ -103,6 +106,11 @@ fn meaning(error: &ConnectorError) -> &'static str {
         }
         ConnectorError::Network { .. } => {
             "the manufacturer could not be reached; a transport problem, not a flow problem"
+        }
+        ConnectorError::Manufacturer {
+            status: Some(403), ..
+        } => {
+            "the login worked, but the portal refuses the data; finish the one-time setup in the portal in a browser"
         }
         ConnectorError::Manufacturer {
             status: Some(400), ..
@@ -158,6 +166,10 @@ mod tests {
             ConnectorError::Manufacturer {
                 status: Some(400),
                 code: Some("invalid_request".into()),
+            },
+            ConnectorError::Manufacturer {
+                status: Some(403),
+                code: None,
             },
             ConnectorError::Manufacturer {
                 status: Some(503),

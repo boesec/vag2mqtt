@@ -1,8 +1,17 @@
-//! The Audi session: tokens and their expiry, stored inside `SessionState::payload`.
+//! The Audi session, stored inside `SessionState::payload`.
+//!
+//! There are two shapes, because there are two routes: the native route keeps tokens, the EU
+//! Data Act portal keeps a cookie jar. Both are treated as secret by persistence, which
+//! encrypts the whole payload.
 
 use chrono::{DateTime, Utc};
 use vag2mqtt_connector_api::{ConnectorError, SessionState};
 use vag2mqtt_domain::{Brand, Secret};
+
+use crate::cookies::Cookies;
+
+/// The name the portal route stores in its session payload.
+pub(crate) const EU_DATA_ACT_ROUTE: &str = "eu_data_act";
 
 /// Safety margin before the access token's real expiry at which the runtime refreshes.
 pub(crate) const REFRESH_MARGIN_SECS: i64 = 60;
@@ -88,6 +97,81 @@ impl AudiTokens {
     }
 }
 
+/// The EU Data Act portal's session: a cookie jar and when it was established.
+///
+/// There is no expiry, because the portal never states one. The route finds out that the
+/// session is gone by being answered `401` or `403`, which it maps onto
+/// [`ConnectorError::SessionExpired`] so the supervisor logs in again (WP-05).
+#[derive(Clone)]
+pub(crate) struct PortalSession {
+    /// Everything the portal and the identity service set along the way.
+    pub(crate) cookies: Cookies,
+    /// When the login that produced these cookies finished.
+    pub(crate) established_at: DateTime<Utc>,
+}
+
+impl std::fmt::Debug for PortalSession {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PortalSession")
+            .field("established_at", &self.established_at)
+            .field("cookies", &format!("{} [REDACTED]", self.cookies.len()))
+            .finish()
+    }
+}
+
+impl PortalSession {
+    /// A session from a jar captured just now.
+    pub(crate) fn new(cookies: Cookies) -> Self {
+        Self {
+            cookies,
+            established_at: Utc::now(),
+        }
+    }
+
+    /// Serialises into a `SessionState` so persistence can encrypt it.
+    pub(crate) fn into_session(self) -> SessionState {
+        SessionState {
+            brand: Brand::Audi,
+            payload: serde_json::json!({
+                "route": EU_DATA_ACT_ROUTE,
+                "cookies": self.cookies,
+                "established_at": self.established_at.to_rfc3339(),
+            }),
+            expires_at: None,
+        }
+    }
+
+    /// Reads the jar back out of a `SessionState`.
+    pub(crate) fn from_session(session: &SessionState) -> Result<Self, ConnectorError> {
+        let parsing = || ConnectorError::Parsing {
+            context: "stored audi portal session",
+        };
+        if session.brand != Brand::Audi {
+            return Err(parsing());
+        }
+        if session.payload.get("route").and_then(|v| v.as_str()) != Some(EU_DATA_ACT_ROUTE) {
+            return Err(parsing());
+        }
+        let cookies: Cookies = session
+            .payload
+            .get("cookies")
+            .cloned()
+            .and_then(|value| serde_json::from_value(value).ok())
+            .ok_or_else(parsing)?;
+        let established_at = session
+            .payload
+            .get("established_at")
+            .and_then(|v| v.as_str())
+            .and_then(|v| DateTime::parse_from_rfc3339(v).ok())
+            .map(|t| t.with_timezone(&Utc))
+            .ok_or_else(parsing)?;
+        Ok(Self {
+            cookies,
+            established_at,
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -143,5 +227,42 @@ mod tests {
         ));
         let wrong_brand = SessionState::new(Brand::Skoda, serde_json::json!({}));
         assert!(AudiTokens::from_session(&wrong_brand).is_err());
+    }
+    #[test]
+    fn a_portal_session_round_trips_and_hides_its_cookies() {
+        let mut cookies = Cookies::default();
+        cookies.absorb(
+            &url::Url::parse("https://portal.example.test/login").unwrap(),
+            &cookie_header("SESSION=COOKIE-MARKER; Path=/"),
+        );
+        let portal = PortalSession::new(cookies);
+        assert!(!format!("{portal:?}").contains("MARKER"));
+        let session = portal.clone().into_session();
+        assert!(session.expires_at.is_none(), "the portal states no expiry");
+        let back = PortalSession::from_session(&session).unwrap();
+        assert_eq!(back.cookies, portal.cookies);
+        assert_eq!(back.established_at, portal.established_at);
+    }
+
+    #[test]
+    fn a_token_session_is_not_mistaken_for_a_portal_session() {
+        let tokens = AudiTokens {
+            access: Secret::new("ACCESS-MARKER".into()),
+            refresh: None,
+            id_token: None,
+            expires_at: Utc::now() + chrono::Duration::hours(1),
+            strategy: "form".into(),
+        };
+        let session = tokens.into_session();
+        assert!(PortalSession::from_session(&session).is_err());
+    }
+
+    fn cookie_header(value: &str) -> reqwest::header::HeaderMap {
+        let mut headers = reqwest::header::HeaderMap::new();
+        headers.append(
+            reqwest::header::SET_COOKIE,
+            reqwest::header::HeaderValue::from_str(value).unwrap(),
+        );
+        headers
     }
 }

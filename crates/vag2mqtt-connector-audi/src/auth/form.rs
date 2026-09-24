@@ -11,8 +11,8 @@ use scraper::{Html, Selector};
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use url::Url;
-use vag2mqtt_connector_api::{ConnectorError, Credentials};
-use vag2mqtt_domain::Secret;
+use vag2mqtt_connector_api::{ConnectorError, ConnectorInfo, Credentials, SessionState};
+use vag2mqtt_domain::{Brand, DataSourceKind, Secret};
 
 use super::AudiAuthStrategy;
 use super::http::{Exchange, HttpClient, resolve_location};
@@ -88,10 +88,24 @@ impl Endpoints {
     }
 }
 
-/// The classic form login.
+/// The steps both routes share: authorize, scrape the e-mail form, post it, scrape and post the
+/// password form.
+///
+/// The native route and the EU Data Act portal differ only in their parameters and in what
+/// happens after the password post, so everything up to that point lives here once.
+#[derive(Clone, Debug)]
+pub(crate) struct Signin {
+    pub(crate) endpoints: Endpoints,
+}
+
+/// The classic form login, ending in a token exchange at the Cariad backend.
+///
+/// The exchange is refused for a public client (`Docs/reference/audi-auth.md` section 1c), so
+/// this route does not currently reach tokens against the live service. It stays because the
+/// portal route reuses four of its five steps, and because a reopened route would revive it.
 #[derive(Clone, Debug)]
 pub struct FormLoginStrategy {
-    endpoints: Endpoints,
+    signin: Signin,
 }
 
 impl FormLoginStrategy {
@@ -102,7 +116,9 @@ impl FormLoginStrategy {
 
     /// Custom endpoints, for tests.
     pub fn with_endpoints(endpoints: Endpoints) -> Self {
-        Self { endpoints }
+        Self {
+            signin: Signin { endpoints },
+        }
     }
 }
 
@@ -113,13 +129,13 @@ impl Default for FormLoginStrategy {
 }
 
 /// PKCE verifier and challenge.
-struct Pkce {
+pub(crate) struct Pkce {
     verifier: Secret<String>,
     challenge: String,
 }
 
 impl Pkce {
-    fn generate() -> Self {
+    pub(crate) fn generate() -> Self {
         let mut bytes = [0u8; 32];
         rand::rng().fill_bytes(&mut bytes);
         let verifier = base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(bytes);
@@ -434,13 +450,22 @@ impl AudiAuthStrategy for FormLoginStrategy {
         "form"
     }
 
+    fn info(&self) -> ConnectorInfo {
+        ConnectorInfo {
+            brand: Brand::Audi,
+            kind: DataSourceKind::LiveApi,
+            min_polling_interval: crate::connector::MIN_LIVE_POLLING_INTERVAL,
+            supports_commands: false,
+        }
+    }
+
     async fn login(
         &self,
-        http: &HttpClient,
         credentials: &Credentials,
         trace: &mut Trace,
-    ) -> Result<AudiTokens, ConnectorError> {
-        let result = self.run_login(http, credentials, trace).await;
+    ) -> Result<SessionState, ConnectorError> {
+        let http = HttpClient::new()?;
+        let result = self.run_login(&http, credentials, trace).await;
         match &result {
             Ok(tokens) => trace.outcome(
                 Step::TokenExchange,
@@ -452,10 +477,29 @@ impl AudiAuthStrategy for FormLoginStrategy {
             Err(error) => trace.outcome(Step::TokenExchange, &format!("failed: {error}")),
         }
         trace.finish();
-        result
+        result.map(AudiTokens::into_session)
     }
 
     async fn refresh(
+        &self,
+        session: &mut SessionState,
+        trace: &mut Trace,
+    ) -> Result<(), ConnectorError> {
+        let tokens = AudiTokens::from_session(session)?;
+        let http = HttpClient::new()?;
+        let result = self.run_refresh(&http, &tokens, trace).await;
+        match &result {
+            Ok(_) => trace.outcome(Step::Refresh, "ok"),
+            Err(error) => trace.outcome(Step::Refresh, &format!("failed: {error}")),
+        }
+        trace.finish();
+        *session = result?.into_session();
+        Ok(())
+    }
+}
+
+impl FormLoginStrategy {
+    async fn run_refresh(
         &self,
         http: &HttpClient,
         tokens: &AudiTokens,
@@ -470,45 +514,32 @@ impl AudiAuthStrategy for FormLoginStrategy {
             );
             return Err(ConnectorError::SessionExpired);
         };
+        let endpoints = &self.signin.endpoints;
         let form = vec![
             ("grant_type".to_string(), "refresh_token".to_string()),
             (
                 "refresh_token".to_string(),
                 refresh_token.expose_secret().clone(),
             ),
-            ("client_id".to_string(), self.endpoints.client_id.clone()),
+            ("client_id".to_string(), endpoints.client_id.clone()),
         ];
         let headers = [
             ("Accept", "application/json"),
-            ("x-client-id", self.endpoints.x_client_id.as_str()),
+            ("x-client-id", endpoints.x_client_id.as_str()),
         ];
         let exchange = http
-            .post_form(
-                Step::Refresh,
-                self.endpoints.token(),
-                &headers,
-                &form,
-                trace,
-            )
+            .post_form(Step::Refresh, endpoints.token(), &headers, &form, trace)
             .await?;
-        let result = if exchange.status.is_success() {
+        if exchange.status.is_success() {
             parse_token_response(&exchange.body, self.name(), tokens.refresh.as_ref())
         } else if exchange.status.is_server_error() {
             Err(manufacturer(exchange.status.as_u16(), None))
         } else {
             tracing::info!(target: LOG, status = exchange.status.as_u16(), "refresh rejected");
             Err(ConnectorError::SessionExpired)
-        };
-        match &result {
-            Ok(_) => trace.outcome(Step::Refresh, "ok"),
-            Err(error) => trace.outcome(Step::Refresh, &format!("failed: {error}")),
         }
-        trace.finish();
-        result
     }
-}
 
-impl FormLoginStrategy {
     async fn run_login(
         &self,
         http: &HttpClient,
@@ -516,6 +547,71 @@ impl FormLoginStrategy {
         trace: &mut Trace,
     ) -> Result<AudiTokens, ConnectorError> {
         let pkce = Pkce::generate();
+        let posted = self.signin.sign_in(http, credentials, &pkce, trace).await?;
+
+        // Step 5: chase redirects until the app callback.
+        let callback = self.signin.chase_to_callback(http, posted, trace).await?;
+        trace.outcome(Step::RedirectChase, "reached the app callback");
+
+        // Step 6: what the callback carries.
+        if let Some(tokens) = tokens_from_callback(&callback, self.name()) {
+            trace.outcome(
+                Step::Callback,
+                "tokens received in the callback (hybrid flow), no exchange needed",
+            );
+            return Ok(tokens);
+        }
+        let code = code_from_callback(&callback).ok_or_else(|| parsing(Step::Callback))?;
+        trace.outcome(Step::Callback, "authorization code received, exchanging it");
+
+        // Step 7: tokens.
+        let endpoints = &self.signin.endpoints;
+        let form = vec![
+            ("grant_type".to_string(), "authorization_code".to_string()),
+            ("code".to_string(), code),
+            ("redirect_uri".to_string(), endpoints.redirect_uri.clone()),
+            ("client_id".to_string(), endpoints.client_id.clone()),
+            (
+                "code_verifier".to_string(),
+                pkce.verifier.expose_secret().clone(),
+            ),
+        ];
+        let headers = [
+            ("Accept", "application/json"),
+            ("x-client-id", endpoints.x_client_id.as_str()),
+        ];
+        let exchange = http
+            .post_form(
+                Step::TokenExchange,
+                endpoints.token(),
+                &headers,
+                &form,
+                trace,
+            )
+            .await?;
+        if exchange.status.is_server_error() {
+            return Err(manufacturer(exchange.status.as_u16(), None));
+        }
+        if !exchange.status.is_success() {
+            let code = serde_json::from_str::<TokenResponse>(&exchange.body)
+                .ok()
+                .and_then(|r| r.error);
+            return Err(manufacturer(exchange.status.as_u16(), code));
+        }
+        parse_token_response(&exchange.body, self.name(), None)
+    }
+}
+
+impl Signin {
+    /// Steps 1 to 4, shared by both routes: authorize, e-mail form, identifier post, password
+    /// post. Returns the password post's response, which is where the routes diverge.
+    pub(crate) async fn sign_in(
+        &self,
+        http: &HttpClient,
+        credentials: &Credentials,
+        pkce: &Pkce,
+        trace: &mut Trace,
+    ) -> Result<Exchange, ConnectorError> {
         let state = random_hex(16);
         let nonce = random_hex(16);
 
@@ -620,63 +716,11 @@ impl FormLoginStrategy {
             );
             return Err(self.unexpected(Step::PasswordPost, &posted));
         }
-
-        // Step 5: chase redirects until the app callback.
-        let callback = self.chase_to_callback(http, posted, trace).await?;
-        trace.outcome(Step::RedirectChase, "reached the app callback");
-
-        // Step 6: what the callback carries.
-        if let Some(tokens) = tokens_from_callback(&callback, self.name()) {
-            trace.outcome(
-                Step::Callback,
-                "tokens received in the callback (hybrid flow), no exchange needed",
-            );
-            return Ok(tokens);
-        }
-        let code = code_from_callback(&callback).ok_or_else(|| parsing(Step::Callback))?;
-        trace.outcome(Step::Callback, "authorization code received, exchanging it");
-
-        // Step 7: tokens.
-        let form = vec![
-            ("grant_type".to_string(), "authorization_code".to_string()),
-            ("code".to_string(), code),
-            (
-                "redirect_uri".to_string(),
-                self.endpoints.redirect_uri.clone(),
-            ),
-            ("client_id".to_string(), self.endpoints.client_id.clone()),
-            (
-                "code_verifier".to_string(),
-                pkce.verifier.expose_secret().clone(),
-            ),
-        ];
-        let headers = [
-            ("Accept", "application/json"),
-            ("x-client-id", self.endpoints.x_client_id.as_str()),
-        ];
-        let exchange = http
-            .post_form(
-                Step::TokenExchange,
-                self.endpoints.token(),
-                &headers,
-                &form,
-                trace,
-            )
-            .await?;
-        if exchange.status.is_server_error() {
-            return Err(manufacturer(exchange.status.as_u16(), None));
-        }
-        if !exchange.status.is_success() {
-            let code = serde_json::from_str::<TokenResponse>(&exchange.body)
-                .ok()
-                .and_then(|r| r.error);
-            return Err(manufacturer(exchange.status.as_u16(), code));
-        }
-        parse_token_response(&exchange.body, self.name(), None)
+        Ok(posted)
     }
 
     /// Follows redirects starting with a GET of `url` until a non-redirect answer.
-    async fn chase_to_page(
+    pub(crate) async fn chase_to_page(
         &self,
         http: &HttpClient,
         step: Step,
@@ -689,7 +733,7 @@ impl FormLoginStrategy {
 
     /// Follows redirects from an exchange until a non-redirect answer. A hop to the app callback
     /// is an error here: the caller expected a page.
-    async fn chase_from(
+    pub(crate) async fn chase_from(
         &self,
         http: &HttpClient,
         step: Step,
@@ -707,6 +751,68 @@ impl FormLoginStrategy {
             }
             let next = resolve_location(&current.url, &location).ok_or_else(|| parsing(step))?;
             current = http.get(step, next, &[], trace).await?;
+        }
+        Err(parsing(step))
+    }
+
+    /// Follows redirects after the password post into the portal, and stops at the first page
+    /// the portal itself serves.
+    ///
+    /// Unlike [`chase_to_callback`](Self::chase_to_callback) this does **not** stop at the
+    /// redirect URI: that request is the one the portal answers with its session cookie, so
+    /// stopping there would throw the session away. Consent pages are only posted while the
+    /// chase is still at the identity service; once it is on `portal`, whatever is served is
+    /// the application and is returned as it is.
+    ///
+    /// `portal` is an authority (`host` or `host:port`), not a bare host, so that a mock
+    /// identity service and a mock portal on the same loopback address stay distinguishable.
+    pub(crate) async fn chase_into_portal(
+        &self,
+        http: &HttpClient,
+        portal: &str,
+        mut current: Exchange,
+        trace: &mut Trace,
+    ) -> Result<Exchange, ConnectorError> {
+        let step = Step::PortalLanding;
+        for _ in 0..MAX_HOPS {
+            if current.is_redirect() {
+                let location = current.location().ok_or_else(|| parsing(step))?.to_string();
+                self.check_known_errors_in(&location)?;
+                let next =
+                    resolve_location(&current.url, &location).ok_or_else(|| parsing(step))?;
+                current = http.get(step, next, &[], trace).await?;
+                continue;
+            }
+            if !current.status.is_success() {
+                return Err(self.unexpected(step, &current));
+            }
+            let on_portal = current.url.authority() == portal;
+            if !on_portal {
+                self.check_known_errors(&current)?;
+                if let Some(challenge) = classify_challenge_page(&current.body) {
+                    trace.outcome(step, &format!("challenge page: {challenge}"));
+                    return Err(challenge);
+                }
+                if let Some(form) = scrape_form(&current.body, &[], "terms")
+                    .or_else(|| scrape_form(&current.body, &[], "consent"))
+                {
+                    trace.outcome(step, "consent page, accepting");
+                    let fields: Vec<(String, String)> = form.fields.into_iter().collect();
+                    let action = resolve_location(&current.url, &form.action)
+                        .ok_or_else(|| parsing(step))?;
+                    current = http.post_form(step, action, &[], &fields, trace).await?;
+                    continue;
+                }
+                trace.outcome(
+                    step,
+                    &format!(
+                        "HTTP 200 page at {} where the portal was expected",
+                        current.url.path()
+                    ),
+                );
+                return Err(parsing(step));
+            }
+            return Ok(current);
         }
         Err(parsing(step))
     }
@@ -763,14 +869,14 @@ impl FormLoginStrategy {
         Err(parsing(step))
     }
 
-    fn check_known_errors(&self, exchange: &Exchange) -> Result<(), ConnectorError> {
+    pub(crate) fn check_known_errors(&self, exchange: &Exchange) -> Result<(), ConnectorError> {
         if let Some(location) = exchange.location() {
             self.check_known_errors_in(location)?;
         }
         self.check_known_errors_in(&exchange.body)
     }
 
-    fn check_known_errors_in(&self, text: &str) -> Result<(), ConnectorError> {
+    pub(crate) fn check_known_errors_in(&self, text: &str) -> Result<(), ConnectorError> {
         match classify_known_error(text) {
             Some(error) => Err(error),
             None => Ok(()),
@@ -778,7 +884,7 @@ impl FormLoginStrategy {
     }
 
     /// A page that could not be parsed: a known error first, a challenge second, else parsing.
-    fn page_error(&self, step: Step, page: &Exchange) -> ConnectorError {
+    pub(crate) fn page_error(&self, step: Step, page: &Exchange) -> ConnectorError {
         if let Some(known) = classify_known_error(&page.body) {
             return known;
         }
@@ -789,7 +895,7 @@ impl FormLoginStrategy {
     }
 
     /// An unexpected status.
-    fn unexpected(&self, step: Step, page: &Exchange) -> ConnectorError {
+    pub(crate) fn unexpected(&self, step: Step, page: &Exchange) -> ConnectorError {
         if let Some(known) = classify_known_error(&page.body) {
             return known;
         }

@@ -21,6 +21,10 @@ pub enum Step {
     TokenExchange,
     /// Refreshing tokens.
     Refresh,
+    /// Landing on the EU Data Act portal after the redirect chase.
+    PortalLanding,
+    /// Asking the portal which vehicles the account has.
+    VehicleList,
 }
 
 impl Step {
@@ -35,6 +39,8 @@ impl Step {
             Step::Callback => "callback",
             Step::TokenExchange => "token_exchange",
             Step::Refresh => "refresh",
+            Step::PortalLanding => "portal_landing",
+            Step::VehicleList => "vehicle_list",
         }
     }
 
@@ -49,6 +55,10 @@ impl Step {
             Step::Callback => 6,
             Step::TokenExchange => 7,
             Step::Refresh => 8,
+            // The two routes share steps 1 to 5 and then diverge, and only one route's steps
+            // ever land in the same trace directory, so the portal reuses 6 and 7.
+            Step::PortalLanding => 6,
+            Step::VehicleList => 7,
         }
     }
 }
