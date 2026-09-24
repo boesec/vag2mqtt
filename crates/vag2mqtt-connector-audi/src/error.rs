@@ -25,6 +25,12 @@ pub enum Step {
     PortalLanding,
     /// Asking the portal which vehicles the account has.
     VehicleList,
+    /// Asking the portal for a vehicle's data request identifier.
+    DataRequest,
+    /// Listing a vehicle's export packages.
+    DatasetList,
+    /// Downloading one export package.
+    DatasetDownload,
 }
 
 impl Step {
@@ -41,6 +47,9 @@ impl Step {
             Step::Refresh => "refresh",
             Step::PortalLanding => "portal_landing",
             Step::VehicleList => "vehicle_list",
+            Step::DataRequest => "data_request",
+            Step::DatasetList => "dataset_list",
+            Step::DatasetDownload => "dataset_download",
         }
     }
 
@@ -59,6 +68,10 @@ impl Step {
             // ever land in the same trace directory, so the portal reuses 6 and 7.
             Step::PortalLanding => 6,
             Step::VehicleList => 7,
+            // A fetch writes its own trace directory, so these start after the login's steps.
+            Step::DataRequest => 9,
+            Step::DatasetList => 10,
+            Step::DatasetDownload => 11,
         }
     }
 }

@@ -69,6 +69,8 @@ url = "2"
 uuid = { version = "1", features = ["v4"] }
 wiremock = "0.6"
 zeroize = "1"
+# EU Data Act packages are ZIP archives; pure Rust deflate only, no C toolchain.
+zip = { version = "7", default-features = false, features = ["deflate-flate2-zlib-rs"] }
 
 [profile.release]
 lto = "thin"

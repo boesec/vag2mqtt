@@ -1,6 +1,6 @@
 [package]
 name = "vag2mqtt-connector-audi"
-description = "Audi connector for VAG2MQTT: myAudi authentication and vehicle data"
+description = "Audi connector for VAG2MQTT: EU Data Act portal login and vehicle data"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -26,6 +26,7 @@ sha2.workspace = true
 thiserror.workspace = true
 tracing.workspace = true
 url.workspace = true
+zip.workspace = true
 
 [dev-dependencies]
 tempfile.workspace = true

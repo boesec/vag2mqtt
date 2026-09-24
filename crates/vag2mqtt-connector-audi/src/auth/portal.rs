@@ -20,6 +20,7 @@
 //! words rather than blaming the credentials.
 
 use async_trait::async_trait;
+use chrono::Utc;
 use serde::Deserialize;
 use url::Url;
 use vag2mqtt_connector_api::{
@@ -32,6 +33,8 @@ use super::form::{CODE_RESPONSE_TYPE, Endpoints, Pkce, Signin};
 use super::http::HttpClient;
 use crate::connector::MIN_PORTAL_POLLING_INTERVAL;
 use crate::error::{Step, parsing};
+use crate::export::normalise::normalise;
+use crate::export::{self, VehicleEndpoints};
 use crate::session::PortalSession;
 use crate::trace::Trace;
 
@@ -203,28 +206,49 @@ impl AudiAuthStrategy for EuDataActStrategy {
         let stored = PortalSession::from_session(session)?;
         let (_, cookies) = self.request_vehicles(&stored, trace).await?;
         trace.finish();
-        *session = PortalSession {
-            cookies,
-            established_at: stored.established_at,
-        }
-        .into_session();
+        *session = stored.with_cookies(cookies).into_session();
         Ok(())
     }
 
-    /// Stage 2 of WP-25, and it waits on B-01.
+    /// Reads the packages the portal produced since the last fetch and returns what all
+    /// packages so far say.
     ///
-    /// Normalising an archive that nobody has seen would be guesswork, and inventing default
-    /// values is exactly what DR-002 forbids. So the route says what it does not have.
+    /// While the portal delivers only empty packages (B-01), every mapped value is
+    /// `unavailable`: known to exist, not delivered. That is the honest state, not an error.
     async fn fetch_state(
         &self,
-        _session: &mut SessionState,
-        _vin: &Vin,
-        _trace: &mut Trace,
+        session: &mut SessionState,
+        vin: &Vin,
+        trace: &mut Trace,
     ) -> Result<VehicleState, ConnectorError> {
-        Err(ConnectorError::Unsupported {
-            operation: "fetch_state over the EU Data Act portal: WP-25 stage 2, blocked by B-01 \
-(the portal currently delivers empty data packages)",
-        })
+        let mut stored = PortalSession::from_session(session)?;
+        let http = HttpClient::with_cookies(stored.cookies.clone())?;
+        let mut export = stored.vehicles.remove(vin.as_str()).unwrap_or_default();
+        let endpoints = VehicleEndpoints {
+            base: &self.base,
+            vin,
+        };
+        let result = export::update(&http, &endpoints, &mut export, trace).await;
+        trace.finish();
+        // Whatever was read before a failure is kept: the high-water mark must not go back.
+        stored
+            .vehicles
+            .insert(vin.as_str().to_string(), export.clone());
+        *session = stored.with_cookies(http.cookies()).into_session();
+        let report = result?;
+        tracing::info!(
+            target: LOG,
+            vin = %vin.short(),
+            listed = report.listed,
+            empty = report.empty,
+            read = report.read,
+            unreadable = report.unreadable,
+            "export packages checked"
+        );
+        if export.points.is_empty() {
+            tracing::info!(target: LOG, vin = %vin.short(), "no export package with content yet");
+        }
+        Ok(normalise(&export.points, Utc::now()))
     }
 
     async fn list_vehicles(
@@ -235,11 +259,7 @@ impl AudiAuthStrategy for EuDataActStrategy {
         let stored = PortalSession::from_session(session)?;
         let (vehicles, cookies) = self.request_vehicles(&stored, trace).await?;
         trace.finish();
-        *session = PortalSession {
-            cookies,
-            established_at: stored.established_at,
-        }
-        .into_session();
+        *session = stored.with_cookies(cookies).into_session();
         Ok(vehicles)
     }
 }
@@ -292,10 +312,7 @@ impl EuDataActStrategy {
                     vehicles = vehicles.len(),
                     "portal session established"
                 );
-                Ok(PortalSession {
-                    cookies,
-                    established_at: session.established_at,
-                })
+                Ok(session.with_cookies(cookies))
             }
             Err(ConnectorError::SessionExpired) => {
                 // The identity service accepted the login; the portal did not serve data.

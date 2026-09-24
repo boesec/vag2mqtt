@@ -400,3 +400,132 @@ async fn a_login_that_ends_on_a_portal_error_page_is_not_a_session() {
         "{code:?}"
     );
 }
+
+/// The fixture, zipped the way the portal delivers a package.
+fn package() -> Vec<u8> {
+    use std::io::Write;
+    let json = std::fs::read(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/audi/eudataact/one_time_export.json"),
+    )
+    .unwrap();
+    let mut buffer = std::io::Cursor::new(Vec::new());
+    {
+        let mut writer = zip::ZipWriter::new(&mut buffer);
+        writer
+            .start_file("package.json", zip::write::SimpleFileOptions::default())
+            .unwrap();
+        writer.write_all(&json).unwrap();
+        writer.finish().unwrap();
+    }
+    buffer.into_inner()
+}
+
+const DATA_PREFIX: &str = "/proxy_api/euda-apim";
+
+async fn mount_data_request(servers: &Servers, datasets: &str) {
+    Mock::given(method("GET"))
+        .and(path(format!(
+            "{DATA_PREFIX}/datarequest/vehicles/{VIN}/metadata/partial"
+        )))
+        .and(header_regex("cookie", &format!("SESSION={SESSION_COOKIE}")))
+        .respond_with(ResponseTemplate::new(200).set_body_string(r#"{"Identifier":"REQ-1"}"#))
+        .mount(&servers.portal)
+        .await;
+    Mock::given(method("GET"))
+        .and(path(format!(
+            "{DATA_PREFIX}/datadelivery/vehicles/{VIN}/REQ-1/list"
+        )))
+        .and(wiremock::matchers::header("type", "partial"))
+        .respond_with(ResponseTemplate::new(200).set_body_string(datasets.to_string()))
+        .mount(&servers.portal)
+        .await;
+}
+
+#[tokio::test]
+async fn fetch_reads_each_package_once_and_skips_the_empty_ones() {
+    let servers = Servers::start().await;
+    servers.mount_vehicles(vehicle_list()).await;
+    mount_data_request(
+        &servers,
+        r#"[{"name":"p1_no_content_found.zip","createdOn":"2026-09-24T10:00:00Z"},
+            {"name":"p2.zip","createdOn":"2026-09-24T10:15:00Z"},
+            {"name":"p3_no_content_found.zip","createdOn":"2026-09-24T10:30:00Z"}]"#,
+    )
+    .await;
+    Mock::given(method("GET"))
+        .and(path(format!(
+            "{DATA_PREFIX}/datadelivery/vehicles/{VIN}/REQ-1/download"
+        )))
+        .and(wiremock::matchers::header("filename", "p2.zip"))
+        .respond_with(ResponseTemplate::new(200).set_body_bytes(package()))
+        .expect(1)
+        .mount(&servers.portal)
+        .await;
+    let connector = servers.connector(TraceConfig::disabled());
+    let vin = Vin::new(VIN).unwrap();
+    let mut session = connector.login(&credentials()).await.unwrap();
+
+    let state = connector.fetch_state(&mut session, &vin).await.unwrap();
+    assert_eq!(state.battery.soc.value().map(|p| p.value()), Some(51));
+    assert_eq!(state.odometer.value().map(|k| k.value()), Some(568));
+    assert!(!state.position.is_supported(), "the export has no GPS");
+
+    // Through persistence and a second poll: nothing new is downloaded (the mock expects one
+    // download), and the values the first package delivered are still there.
+    let mut restored =
+        vag2mqtt_connector_api::SessionState::from_bytes(&session.to_bytes().unwrap()).unwrap();
+    let again = connector.fetch_state(&mut restored, &vin).await.unwrap();
+    assert_eq!(again.battery.soc.value().map(|p| p.value()), Some(51));
+}
+
+#[tokio::test]
+async fn only_empty_packages_mean_unavailable_values_not_an_error() {
+    let servers = Servers::start().await;
+    servers.mount_vehicles(vehicle_list()).await;
+    mount_data_request(
+        &servers,
+        r#"{"files":[{"name":"p1_no_content_found.zip","createdOn":"2026-09-24T10:00:00Z"}]}"#,
+    )
+    .await;
+    let connector = servers.connector(TraceConfig::disabled());
+    let mut session = connector.login(&credentials()).await.unwrap();
+
+    let state = connector
+        .fetch_state(&mut session, &Vin::new(VIN).unwrap())
+        .await
+        .unwrap();
+    assert!(matches!(
+        state.battery.soc,
+        vag2mqtt_domain::Reading::Unavailable
+    ));
+    assert!(matches!(
+        state.odometer,
+        vag2mqtt_domain::Reading::Unavailable
+    ));
+    assert!(!state.doors.lock.is_supported());
+}
+
+#[tokio::test]
+async fn a_vehicle_without_a_data_request_says_so() {
+    let servers = Servers::start().await;
+    servers.mount_vehicles(vehicle_list()).await;
+    Mock::given(method("GET"))
+        .and(path(format!(
+            "{DATA_PREFIX}/datarequest/vehicles/{VIN}/metadata/partial"
+        )))
+        .respond_with(ResponseTemplate::new(404))
+        .mount(&servers.portal)
+        .await;
+    let connector = servers.connector(TraceConfig::disabled());
+    let mut session = connector.login(&credentials()).await.unwrap();
+
+    let error = connector
+        .fetch_state(&mut session, &Vin::new(VIN).unwrap())
+        .await
+        .unwrap_err();
+    let ConnectorError::Manufacturer { code, .. } = &error else {
+        panic!("expected a manufacturer error, got {error:?}");
+    };
+    assert!(code.as_deref().unwrap_or_default().contains("data request"));
+}

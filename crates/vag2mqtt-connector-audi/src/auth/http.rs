@@ -142,6 +142,23 @@ impl HttpClient {
             .await
     }
 
+    /// A GET whose body is binary, such as an export package. The body is not written to the
+    /// trace, only its size: a package is a full report on the vehicle.
+    pub(crate) async fn get_bytes(
+        &self,
+        step: Step,
+        url: Url,
+        headers: &[(&str, &str)],
+        trace: &mut Trace,
+    ) -> Result<(StatusCode, Vec<u8>), ConnectorError> {
+        let raw = self
+            .send_raw(step, Method::GET, url, headers, None, trace)
+            .await?;
+        let summary = format!("[{} bytes of binary body, not recorded]", raw.body.len());
+        raw.trace(step, &summary, trace);
+        Ok((raw.status, raw.body))
+    }
+
     async fn send(
         &self,
         step: Step,
@@ -151,6 +168,28 @@ impl HttpClient {
         body: Option<String>,
         trace: &mut Trace,
     ) -> Result<Exchange, ConnectorError> {
+        let raw = self
+            .send_raw(step, method, url, headers, body, trace)
+            .await?;
+        let text = String::from_utf8_lossy(&raw.body).into_owned();
+        raw.trace(step, &text, trace);
+        Ok(Exchange {
+            url: raw.url,
+            status: raw.status,
+            headers: raw.headers,
+            body: text,
+        })
+    }
+
+    async fn send_raw(
+        &self,
+        step: Step,
+        method: Method,
+        url: Url,
+        headers: &[(&str, &str)],
+        body: Option<String>,
+        trace: &mut Trace,
+    ) -> Result<RawExchange, ConnectorError> {
         let mut header_map = HeaderMap::new();
         for (name, value) in headers {
             if let (Ok(name), Ok(value)) = (
@@ -184,21 +223,39 @@ impl HttpClient {
         if let Ok(mut jar) = self.captured.lock() {
             jar.absorb(&final_url, &response_headers);
         }
-        let body = response.text().await.map_err(|e| network(step, &e))?;
-
-        let traced_response: Vec<(String, String)> = response_headers
-            .iter()
-            .map(|(k, v)| (k.to_string(), v.to_str().unwrap_or("[binary]").to_string()))
-            .collect();
-        trace.response(step, status.as_u16(), &traced_response, &body);
+        let body = response
+            .bytes()
+            .await
+            .map_err(|e| network(step, &e))?
+            .to_vec();
         tracing::trace!(target: "vag2mqtt::auth", step = %step, status = status.as_u16(), bytes = body.len(), "response");
 
-        Ok(Exchange {
+        Ok(RawExchange {
             url: final_url,
             status,
             headers: response_headers,
             body,
         })
+    }
+}
+
+/// A response before its body is interpreted as text or bytes.
+struct RawExchange {
+    url: Url,
+    status: StatusCode,
+    headers: HeaderMap,
+    body: Vec<u8>,
+}
+
+impl RawExchange {
+    /// Records the response in the trace with `body` standing for the body.
+    fn trace(&self, step: Step, body: &str, trace: &mut Trace) {
+        let headers: Vec<(String, String)> = self
+            .headers
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.to_str().unwrap_or("[binary]").to_string()))
+            .collect();
+        trace.response(step, self.status.as_u16(), &headers, body);
     }
 }
 

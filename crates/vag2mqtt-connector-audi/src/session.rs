@@ -8,7 +8,10 @@ use chrono::{DateTime, Utc};
 use vag2mqtt_connector_api::{ConnectorError, SessionState};
 use vag2mqtt_domain::{Brand, Secret};
 
+use std::collections::BTreeMap;
+
 use crate::cookies::Cookies;
+use crate::export::ExportState;
 
 /// The name the portal route stores in its session payload.
 pub(crate) const EU_DATA_ACT_ROUTE: &str = "eu_data_act";
@@ -108,6 +111,12 @@ pub(crate) struct PortalSession {
     pub(crate) cookies: Cookies,
     /// When the login that produced these cookies finished.
     pub(crate) established_at: DateTime<Utc>,
+    /// What the export packages said so far, per VIN.
+    ///
+    /// Kept in the session because the connector is stateless and the runtime persists the
+    /// session after every successful call. A new login starts it afresh, which only costs one
+    /// backfill.
+    pub(crate) vehicles: BTreeMap<String, ExportState>,
 }
 
 impl std::fmt::Debug for PortalSession {
@@ -125,7 +134,13 @@ impl PortalSession {
         Self {
             cookies,
             established_at: Utc::now(),
+            vehicles: BTreeMap::new(),
         }
+    }
+
+    /// The same session with the jar as it stands after a call.
+    pub(crate) fn with_cookies(self, cookies: Cookies) -> Self {
+        Self { cookies, ..self }
     }
 
     /// Serialises into a `SessionState` so persistence can encrypt it.
@@ -136,6 +151,7 @@ impl PortalSession {
                 "route": EU_DATA_ACT_ROUTE,
                 "cookies": self.cookies,
                 "established_at": self.established_at.to_rfc3339(),
+                "vehicles": self.vehicles,
             }),
             expires_at: None,
         }
@@ -165,9 +181,18 @@ impl PortalSession {
             .and_then(|v| DateTime::parse_from_rfc3339(v).ok())
             .map(|t| t.with_timezone(&Utc))
             .ok_or_else(parsing)?;
+        // Absent in sessions stored before WP-25 stage 2; an unreadable one is dropped rather
+        // than costing the session, since it only holds what the next fetch reads again.
+        let vehicles = session
+            .payload
+            .get("vehicles")
+            .cloned()
+            .and_then(|value| serde_json::from_value(value).ok())
+            .unwrap_or_default();
         Ok(Self {
             cookies,
             established_at,
+            vehicles,
         })
     }
 }
