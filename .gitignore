@@ -20,6 +20,10 @@
 # Recorded manufacturer responses before anonymisation
 /fixtures/**/raw/
 
+# Raw manufacturer exports dropped into the repository root (they carry the real VIN and user id)
+/*.json
+/*.zip
+
 # Editors and operating systems
 .idea/
 *.swp

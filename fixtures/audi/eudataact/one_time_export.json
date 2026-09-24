@@ -1,0 +1,1766 @@
+{
+ "vin": "WAUZZZ0000000TEST",
+ "userId": "00000000-0000-0000-0000-000000000000",
+ "Data": [
+  {
+   "key": "127cba6d-8845-3f53-b830-a0f1c321db3b",
+   "dataFieldName": "chargingSession.[2].peakChargePower",
+   "value": "4.2",
+   "timestampUtc": "1970-01-21T17:05:29.910Z"
+  },
+  {
+   "key": "893b3e18-654e-3991-87cb-f19a597a0bfa",
+   "dataFieldName": "chargingSession.[6].activeChargingTime",
+   "value": "10483",
+   "timestampUtc": "1970-01-21T17:11:54.926Z"
+  },
+  {
+   "key": "5642265f-9edd-3ab5-b9ca-ec4aa654d532",
+   "dataFieldName": "trp.odoS",
+   "value": "563025.0",
+   "timestampUtc": "2026-09-22T10:22:23.5920Z"
+  },
+  {
+   "key": "893b3e18-654e-3991-87cb-f19a597a0bfa",
+   "dataFieldName": "chargingSession.[10].activeChargingTime",
+   "value": "2607",
+   "timestampUtc": "1970-01-21T17:16:17.059Z"
+  },
+  {
+   "key": "2c571b47-cdba-35c0-a4e2-fb4c6cab42a5",
+   "dataFieldName": "aggregation.day.[3].date",
+   "value": "2026-09-17T00:00Z",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "872a6fcd-77d0-3a6d-9051-ccd8356bab56",
+   "dataFieldName": "chargingSession.[5].deltaSoc",
+   "value": "17",
+   "timestampUtc": "1970-01-21T17:10:18.484Z"
+  },
+  {
+   "key": "cce19f5b-7de7-3d46-97f3-820ade18e363",
+   "dataFieldName": "payloadType",
+   "value": "CMS_OPTIONS_REPORT",
+   "timestampUtc": "2026-09-23T13:30:00.000Z"
+  },
+  {
+   "key": "ff9f7ba1-d466-390c-bb77-434d20602778",
+   "dataFieldName": "envelope.[1].context.backendCapturedTimestamp.seconds",
+   "value": "1790170201",
+   "timestampUtc": "2026-09-23T13:30:00.261Z"
+  },
+  {
+   "key": "5e77cd48-ce25-3058-b63e-351240231cde",
+   "dataFieldName": "batteryStatus.hvBatteryTemperature.temperatureValue",
+   "value": "20.0",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "872a6fcd-77d0-3a6d-9051-ccd8356bab56",
+   "dataFieldName": "chargingSession.[8].deltaSoc",
+   "value": "6",
+   "timestampUtc": "1970-01-21T17:14:41.357Z"
+  },
+  {
+   "key": "b2ff5b94-b9cc-3abb-8d26-1a7f6e3dab4b",
+   "dataFieldName": "aggregation.day.[6].chargedEnergy",
+   "value": "14.5",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "872a6fcd-77d0-3a6d-9051-ccd8356bab56",
+   "dataFieldName": "chargingSession.[1].deltaSoc",
+   "value": "35",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "b44679ec-09ff-35a1-853e-c763c4d41d34",
+   "dataFieldName": "chargingStatus.actionState",
+   "value": "INVALID",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "e3c5bc70-cc06-3090-a22a-fb1fbebc5456",
+   "dataFieldName": "plugStatusItem.plugPosition",
+   "value": "REAR_RIGHT_1",
+   "timestampUtc": "2026-09-23T15:24:30.356Z"
+  },
+  {
+   "key": "b2ff5b94-b9cc-3abb-8d26-1a7f6e3dab4b",
+   "dataFieldName": "aggregation.day.[1].chargedEnergy",
+   "value": "30.0",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "738b4751-04fe-3576-8d77-c182b38bde63",
+   "dataFieldName": "chargingSession.[3].chargeMode.[2]",
+   "value": "immediatelyProfile",
+   "timestampUtc": "1970-01-21T17:08:36.215Z"
+  },
+  {
+   "key": "2eb82c1f-a894-3b5a-b4b4-87a913f052d6",
+   "dataFieldName": "chargingSession.[6].endSoc",
+   "value": "80",
+   "timestampUtc": "1970-01-21T17:11:54.926Z"
+  },
+  {
+   "key": "738b4751-04fe-3576-8d77-c182b38bde63",
+   "dataFieldName": "chargingSession.[6].chargeMode.[1]",
+   "value": "immediatelyStopped",
+   "timestampUtc": "1970-01-21T17:11:54.926Z"
+  },
+  {
+   "key": "fa653e29-aadd-3af0-aae2-5e6ce2c6ccc8",
+   "dataFieldName": "chargingSession.[10].chargeType",
+   "value": "AC",
+   "timestampUtc": "1970-01-21T17:16:17.059Z"
+  },
+  {
+   "key": "8070699a-1c6e-3fcf-886a-776d7a871553",
+   "dataFieldName": "chargingSession.[3].sessionId",
+   "value": "00000000-0000-4000-8000-000000000001",
+   "timestampUtc": "1970-01-21T17:08:36.215Z"
+  },
+  {
+   "key": "aae1c6db-b93f-3a5b-8f64-d67a639f85a4",
+   "dataFieldName": "powerCurve.[1].timeCurve.[1].soc",
+   "value": "61",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "fcdb4f3e-791b-397d-be8b-71c0f742199b",
+   "dataFieldName": "envelope.[1].context.backendCapturedTimestamp.nanos",
+   "value": "611000000",
+   "timestampUtc": "2026-09-23T13:30:00.261Z"
+  },
+  {
+   "key": "bbb5a44a-4df6-33ea-849a-351ad51af696",
+   "dataFieldName": "instrumentClusterTime",
+   "value": "2026-09-23T17:04:16+02:00",
+   "timestampUtc": "2026-09-23T15:04:16.556Z"
+  },
+  {
+   "key": "68cad322-6eac-3ea0-a584-fc278aef7e25",
+   "dataFieldName": "vehicleIdentifier",
+   "value": "00000000000000000000000000000002",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "0e0938c2-2d39-32c4-868c-4b14d0a63734",
+   "dataFieldName": "envelope.[0].context.trackingIdentifier",
+   "value": "00000000000000000000000000000003",
+   "timestampUtc": "N/A"
+  },
+  {
+   "key": "cce19f5b-7de7-3d46-97f3-820ade18e363",
+   "dataFieldName": "payloadType",
+   "value": "BCCM_SETTINGS_REPORT",
+   "timestampUtc": "2026-09-23T13:30:00.331Z"
+  },
+  {
+   "key": "738b4751-04fe-3576-8d77-c182b38bde63",
+   "dataFieldName": "chargingSession.[5].chargeMode.[2]",
+   "value": "immediatelyStopped",
+   "timestampUtc": "1970-01-21T17:10:18.484Z"
+  },
+  {
+   "key": "b2ff5b94-b9cc-3abb-8d26-1a7f6e3dab4b",
+   "dataFieldName": "aggregation.day.[9].chargedEnergy",
+   "value": "1.5",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "d1459d8a-893c-3035-bdc6-438c6cb837af",
+   "dataFieldName": "autoUnlockPlugWhenCharged",
+   "value": "OFF",
+   "timestampUtc": "2026-09-23T13:30:00.331Z"
+  },
+  {
+   "key": "3b917097-b2a7-33c9-aab2-b5098500f951",
+   "dataFieldName": "envelope.[2].report.messageId",
+   "value": "00000000-0000-4000-8000-000000000004",
+   "timestampUtc": "2026-09-23T16:06:10.554Z"
+  },
+  {
+   "key": "48eb50df-c3fe-3814-a6b9-4025ad00083b",
+   "dataFieldName": "envelope.[2].context.messageId",
+   "value": "00000000-0000-4000-8000-000000000004",
+   "timestampUtc": "2026-09-23T16:06:10.554Z"
+  },
+  {
+   "key": "1b8e39d6-c3d2-3b01-8691-d5735305b97d",
+   "dataFieldName": "INFO_MAKE",
+   "value": "AU"
+  },
+  {
+   "key": "893b3e18-654e-3991-87cb-f19a597a0bfa",
+   "dataFieldName": "chargingSession.[3].activeChargingTime",
+   "value": "6699",
+   "timestampUtc": "1970-01-21T17:08:36.215Z"
+  },
+  {
+   "key": "a6e3a1db-fb0d-3588-b3a0-d97ea911febd",
+   "dataFieldName": "batteryStatus.cruisingRange.engineType",
+   "value": "TYPE_IS_ELECTRIC",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "673d6076-b052-326a-9163-1ae161c2a0b6",
+   "dataFieldName": "trp.odoE",
+   "value": "566476.0",
+   "timestampUtc": "2026-09-22T12:49:46.9590Z"
+  },
+  {
+   "key": "8543fc5e-1df0-3811-91aa-2a7550e1c5c5",
+   "dataFieldName": "chargingStatus.chargingScenario",
+   "value": "OFF",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "68cad322-6eac-3ea0-a584-fc278aef7e25",
+   "dataFieldName": "vehicleIdentifier",
+   "value": "00000000000000000000000000000002",
+   "timestampUtc": "2026-09-23T15:24:30.356Z"
+  },
+  {
+   "key": "aae1c6db-b93f-3a5b-8f64-d67a639f85a4",
+   "dataFieldName": "powerCurve.[1].timeCurve.[2].soc",
+   "value": "61",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "a9dacebb-cfc8-39a6-a5ce-8dc897586e77",
+   "dataFieldName": "trp.tzn",
+   "value": "Etc/GMT-2",
+   "timestampUtc": "2026-09-22T12:49:46.9590Z"
+  },
+  {
+   "key": "2617ccfd-84bf-3e99-90d5-af341a79190d",
+   "dataFieldName": "aggregation.month.[1].chargedEnergy",
+   "value": "93.0",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "3c607d9a-4b9b-3630-b8c9-0e414caaaa6a",
+   "dataFieldName": "causedBy",
+   "value": "VEHICLE_INITIATED",
+   "timestampUtc": "2026-09-23T13:30:00.331Z"
+  },
+  {
+   "key": "5ca823e6-b750-3e12-a2a4-0d227bf118e6",
+   "dataFieldName": "envelope.[0].context.payloadType",
+   "value": "CLIMA_ERROR_REPORT",
+   "timestampUtc": "N/A"
+  },
+  {
+   "key": "8070699a-1c6e-3fcf-886a-776d7a871553",
+   "dataFieldName": "chargingSession.[5].sessionId",
+   "value": "00000000-0000-4000-8000-000000000005",
+   "timestampUtc": "1970-01-21T17:10:18.484Z"
+  },
+  {
+   "key": "63d98e41-7535-3f7b-aea6-a03693849b03",
+   "dataFieldName": "powerCurve.[1].timeCurve.[2].chargePower",
+   "value": "100.0",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "738b4751-04fe-3576-8d77-c182b38bde63",
+   "dataFieldName": "chargingSession.[6].chargeMode.[2]",
+   "value": "immediatelyProfile",
+   "timestampUtc": "1970-01-21T17:11:54.926Z"
+  },
+  {
+   "key": "cc3089cf-615e-334d-9318-8621739d7aa0",
+   "dataFieldName": "envelope.[0].context.causedBy",
+   "value": "START_CLIMA_WITH_SETTINGS",
+   "timestampUtc": "N/A"
+  },
+  {
+   "key": "9d76c56d-f28e-3402-a7bb-faa4757d9bba",
+   "dataFieldName": "envelope.[0].context.errorContext.errorType",
+   "value": "INTERNAL_ERROR",
+   "timestampUtc": "N/A"
+  },
+  {
+   "key": "8c687441-380f-361f-9381-37d1f4a59a71",
+   "dataFieldName": "chargingSession.[9].stopChargingTimestamp",
+   "value": "2026-09-22T14:58:40Z",
+   "timestampUtc": "1970-01-21T17:15:34.214Z"
+  },
+  {
+   "key": "580ed1f6-b894-38fb-b867-1e8502f7fb84",
+   "dataFieldName": "carCapturedTimeStamp.nanos",
+   "value": "762401800",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "b2ff5b94-b9cc-3abb-8d26-1a7f6e3dab4b",
+   "dataFieldName": "aggregation.day.[8].chargedEnergy",
+   "value": "9.0",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "8070699a-1c6e-3fcf-886a-776d7a871553",
+   "dataFieldName": "chargingSession.[4].sessionId",
+   "value": "00000000-0000-4000-8000-000000000006",
+   "timestampUtc": "1970-01-21T17:10:03.396Z"
+  },
+  {
+   "key": "a5d92f02-4799-34ca-b382-2cc71d2381de",
+   "dataFieldName": "batteryStatus.hvBatteryTemperature.temperatureUnit",
+   "value": "TEMPERATURE_UNIT_CELSIUS",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "3c607d9a-4b9b-3630-b8c9-0e414caaaa6a",
+   "dataFieldName": "causedBy",
+   "value": "VEHICLE_INITIATED",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "48eb50df-c3fe-3814-a6b9-4025ad00083b",
+   "dataFieldName": "envelope.[1].context.messageId",
+   "value": "00000000-0000-4000-8000-000000000007",
+   "timestampUtc": "2026-09-23T13:30:00.261Z"
+  },
+  {
+   "key": "184e64c9-956b-34c2-b521-0fd9edbbc151",
+   "dataFieldName": "carCapturedTimeStamp.seconds",
+   "value": "1790179601",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "5ca823e6-b750-3e12-a2a4-0d227bf118e6",
+   "dataFieldName": "envelope.[2].context.payloadType",
+   "value": "CLIMA_STATE_REPORT",
+   "timestampUtc": "2026-09-23T16:06:10.554Z"
+  },
+  {
+   "key": "8c687441-380f-361f-9381-37d1f4a59a71",
+   "dataFieldName": "chargingSession.[8].stopChargingTimestamp",
+   "value": "2026-09-22T12:49:16Z",
+   "timestampUtc": "1970-01-21T17:14:41.357Z"
+  },
+  {
+   "key": "c6226368-b2b6-38de-ab7e-532a497d0b1e",
+   "dataFieldName": "envelope.[0].report.backendError.errorNumber",
+   "value": "2",
+   "timestampUtc": "N/A"
+  },
+  {
+   "key": "5ca823e6-b750-3e12-a2a4-0d227bf118e6",
+   "dataFieldName": "envelope.[1].context.payloadType",
+   "value": "CLIMA_SETTINGS_REPORT",
+   "timestampUtc": "2026-09-23T13:30:00.261Z"
+  },
+  {
+   "key": "90761893-a0d2-3a1c-824a-5f42075735cc",
+   "dataFieldName": "chargingStatus.chargePower_kW",
+   "value": "0.0",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "738b4751-04fe-3576-8d77-c182b38bde63",
+   "dataFieldName": "chargingSession.[9].chargeMode.[2]",
+   "value": "immediatelyStopped",
+   "timestampUtc": "1970-01-21T17:15:34.214Z"
+  },
+  {
+   "key": "738b4751-04fe-3576-8d77-c182b38bde63",
+   "dataFieldName": "chargingSession.[1].chargeMode.[2]",
+   "value": "immediatelyStopped",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "738b4751-04fe-3576-8d77-c182b38bde63",
+   "dataFieldName": "chargingSession.[8].chargeMode.[1]",
+   "value": "immediatelyProfile",
+   "timestampUtc": "1970-01-21T17:14:41.357Z"
+  },
+  {
+   "key": "f8a6e6be-87e8-3424-937f-9bd149fab786",
+   "dataFieldName": "plugStatusItem.infrastructureState",
+   "value": "UNAVAILABLE",
+   "timestampUtc": "2026-09-23T15:24:30.356Z"
+  },
+  {
+   "key": "a7470e05-15ce-377c-9285-10e7f3c93530",
+   "dataFieldName": "powerCurve.[1].timeCurve.[2].deltaChargeEnergy",
+   "value": "0.5",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "8711ad0f-6979-3803-824a-927555cb785d",
+   "dataFieldName": "vehiclePlatform",
+   "value": "UNKNOWN",
+   "timestampUtc": "2026-09-16T02:41:55.000Z"
+  },
+  {
+   "key": "580ed1f6-b894-38fb-b867-1e8502f7fb84",
+   "dataFieldName": "carCapturedTimeStamp.nanos",
+   "value": "356471500",
+   "timestampUtc": "2026-09-23T15:24:30.356Z"
+  },
+  {
+   "key": "3e14b53a-ec09-3bd8-b872-724abdd1692c",
+   "dataFieldName": "chargingStatus.profileChargeReason",
+   "value": "INVALID",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "b7f82d37-2387-3edd-a570-eb3ac78384a5",
+   "dataFieldName": "INFO_MODEL_YEAR",
+   "value": "2027"
+  },
+  {
+   "key": "127cba6d-8845-3f53-b830-a0f1c321db3b",
+   "dataFieldName": "chargingSession.[10].peakChargePower",
+   "value": "2.0",
+   "timestampUtc": "1970-01-21T17:16:17.059Z"
+  },
+  {
+   "key": "51e69bf7-1415-367f-b152-bd456eac7a1b",
+   "dataFieldName": "car.mod",
+   "value": "AU513"
+  },
+  {
+   "key": "2c571b47-cdba-35c0-a4e2-fb4c6cab42a5",
+   "dataFieldName": "aggregation.day.[7].date",
+   "value": "2026-09-21T00:00Z",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "e3c5bc70-cc06-3090-a22a-fb1fbebc5456",
+   "dataFieldName": "plugStatusItem.plugPosition",
+   "value": "REAR_LEFT_1",
+   "timestampUtc": "2026-09-23T15:24:30.356Z"
+  },
+  {
+   "key": "fa653e29-aadd-3af0-aae2-5e6ce2c6ccc8",
+   "dataFieldName": "chargingSession.[4].chargeType",
+   "value": "AC",
+   "timestampUtc": "1970-01-21T17:10:03.396Z"
+  },
+  {
+   "key": "8070699a-1c6e-3fcf-886a-776d7a871553",
+   "dataFieldName": "chargingSession.[10].sessionId",
+   "value": "00000000-0000-4000-8000-000000000008",
+   "timestampUtc": "1970-01-21T17:16:17.059Z"
+  },
+  {
+   "key": "35dc8415-c0f3-3d99-bde4-5212c5244f35",
+   "dataFieldName": "envelope.[1].report.climatizationElementSettings.zoneRearLeftEnabled",
+   "value": "true",
+   "timestampUtc": "2026-09-23T13:30:00.261Z"
+  },
+  {
+   "key": "2e17180d-f6e3-3596-a806-adf1e7c2115e",
+   "dataFieldName": "trp.idlSec",
+   "value": "0.0",
+   "timestampUtc": "2026-09-22T12:49:46.9590Z"
+  },
+  {
+   "key": "68cad322-6eac-3ea0-a584-fc278aef7e25",
+   "dataFieldName": "vehicleIdentifier",
+   "value": "00000000000000000000000000000002",
+   "timestampUtc": "2026-09-23T15:04:16.556Z"
+  },
+  {
+   "key": "cc3089cf-615e-334d-9318-8621739d7aa0",
+   "dataFieldName": "envelope.[1].context.causedBy",
+   "value": "VEHICLE_INITIATED",
+   "timestampUtc": "2026-09-23T13:30:00.261Z"
+  },
+  {
+   "key": "2c571b47-cdba-35c0-a4e2-fb4c6cab42a5",
+   "dataFieldName": "aggregation.day.[5].date",
+   "value": "2026-09-19T00:00Z",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "738b4751-04fe-3576-8d77-c182b38bde63",
+   "dataFieldName": "chargingSession.[2].chargeMode.[1]",
+   "value": "immediatelyStopped",
+   "timestampUtc": "1970-01-21T17:05:29.910Z"
+  },
+  {
+   "key": "738b4751-04fe-3576-8d77-c182b38bde63",
+   "dataFieldName": "chargingSession.[2].chargeMode.[2]",
+   "value": "immediatelyProfile",
+   "timestampUtc": "1970-01-21T17:05:29.910Z"
+  },
+  {
+   "key": "fa653e29-aadd-3af0-aae2-5e6ce2c6ccc8",
+   "dataFieldName": "chargingSession.[2].chargeType",
+   "value": "AC",
+   "timestampUtc": "1970-01-21T17:05:29.910Z"
+  },
+  {
+   "key": "36301b86-250b-39a0-9a49-eb179d5129a6",
+   "dataFieldName": "chargingSession.[9].startChargingTimestamp",
+   "value": "2026-09-22T13:09:08Z",
+   "timestampUtc": "1970-01-21T17:15:34.214Z"
+  },
+  {
+   "key": "ff9f7ba1-d466-390c-bb77-434d20602778",
+   "dataFieldName": "envelope.[3].context.backendCapturedTimestamp.seconds",
+   "value": "1790170201",
+   "timestampUtc": "2026-09-23T13:30:00.332Z"
+  },
+  {
+   "key": "127cba6d-8845-3f53-b830-a0f1c321db3b",
+   "dataFieldName": "chargingSession.[5].peakChargePower",
+   "value": "11.1",
+   "timestampUtc": "1970-01-21T17:10:18.484Z"
+  },
+  {
+   "key": "36301b86-250b-39a0-9a49-eb179d5129a6",
+   "dataFieldName": "chargingSession.[4].startChargingTimestamp",
+   "value": "2026-09-18T11:40:38Z",
+   "timestampUtc": "1970-01-21T17:10:03.396Z"
+  },
+  {
+   "key": "127cba6d-8845-3f53-b830-a0f1c321db3b",
+   "dataFieldName": "chargingSession.[8].peakChargePower",
+   "value": "3.2",
+   "timestampUtc": "1970-01-21T17:14:41.357Z"
+  },
+  {
+   "key": "36301b86-250b-39a0-9a49-eb179d5129a6",
+   "dataFieldName": "chargingSession.[3].startChargingTimestamp",
+   "value": "2026-09-17T13:24:40Z",
+   "timestampUtc": "1970-01-21T17:08:36.215Z"
+  },
+  {
+   "key": "893b3e18-654e-3991-87cb-f19a597a0bfa",
+   "dataFieldName": "chargingSession.[9].activeChargingTime",
+   "value": "6430",
+   "timestampUtc": "1970-01-21T17:15:34.214Z"
+  },
+  {
+   "key": "fa653e29-aadd-3af0-aae2-5e6ce2c6ccc8",
+   "dataFieldName": "chargingSession.[7].chargeType",
+   "value": "AC",
+   "timestampUtc": "1970-01-21T17:13:20.137Z"
+  },
+  {
+   "key": "2eb82c1f-a894-3b5a-b4b4-87a913f052d6",
+   "dataFieldName": "chargingSession.[5].endSoc",
+   "value": "75",
+   "timestampUtc": "1970-01-21T17:10:18.484Z"
+  },
+  {
+   "key": "645ac025-ab91-3cd1-b9ee-a1f93a84abdc",
+   "dataFieldName": "chargeModeSelection",
+   "value": "MANUAL",
+   "timestampUtc": "2026-09-23T13:30:00.331Z"
+  },
+  {
+   "key": "90a81454-90a5-3a31-a5e7-b5012698af0f",
+   "dataFieldName": "car.vin",
+   "value": "WAUZZZ0000000TEST"
+  },
+  {
+   "key": "8cebd00d-a121-31b1-b327-c7ca5d23a393",
+   "dataFieldName": "timer_charging",
+   "value": "false",
+   "timestampUtc": "2026-09-23T13:30:00.000Z"
+  },
+  {
+   "key": "127cba6d-8845-3f53-b830-a0f1c321db3b",
+   "dataFieldName": "chargingSession.[3].peakChargePower",
+   "value": "3.0",
+   "timestampUtc": "1970-01-21T17:08:36.215Z"
+  },
+  {
+   "key": "3c607d9a-4b9b-3630-b8c9-0e414caaaa6a",
+   "dataFieldName": "causedBy",
+   "value": "VEHICLE_INITIATED",
+   "timestampUtc": "2026-09-23T15:24:30.356Z"
+  },
+  {
+   "key": "738b4751-04fe-3576-8d77-c182b38bde63",
+   "dataFieldName": "chargingSession.[4].chargeMode.[2]",
+   "value": "immediatelyStopped",
+   "timestampUtc": "1970-01-21T17:10:03.396Z"
+  },
+  {
+   "key": "36301b86-250b-39a0-9a49-eb179d5129a6",
+   "dataFieldName": "chargingSession.[1].startChargingTimestamp",
+   "value": "2026-09-14T20:56:31Z",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "17e75411-e651-3ba5-9358-6aab3b022581",
+   "dataFieldName": "plugStatusItem.plugConnectionState",
+   "value": "DISCONNECTED",
+   "timestampUtc": "2026-09-23T15:24:30.356Z"
+  },
+  {
+   "key": "8711ad0f-6979-3803-824a-927555cb785d",
+   "dataFieldName": "vehiclePlatform",
+   "value": "UNKNOWN",
+   "timestampUtc": "2026-09-23T13:30:00.000Z"
+  },
+  {
+   "key": "5f5e561b-e7b8-3e8a-a255-cbd6d9559b81",
+   "dataFieldName": "envelope.[1].report.duration",
+   "value": "0",
+   "timestampUtc": "2026-09-23T13:30:00.261Z"
+  },
+  {
+   "key": "f530fc38-9c4a-3f78-8756-7634ce5eb2c4",
+   "dataFieldName": "careMode",
+   "value": "DEACTIVATED",
+   "timestampUtc": "2026-09-23T13:30:00.331Z"
+  },
+  {
+   "key": "ff9f7ba1-d466-390c-bb77-434d20602778",
+   "dataFieldName": "envelope.[2].context.backendCapturedTimestamp.seconds",
+   "value": "1790179572",
+   "timestampUtc": "2026-09-23T16:06:10.554Z"
+  },
+  {
+   "key": "b2ff5b94-b9cc-3abb-8d26-1a7f6e3dab4b",
+   "dataFieldName": "aggregation.day.[2].chargedEnergy",
+   "value": "14.5",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "3c607d9a-4b9b-3630-b8c9-0e414caaaa6a",
+   "dataFieldName": "causedBy",
+   "value": "VEHICLE_INITIATED",
+   "timestampUtc": "2026-09-23T15:04:16.556Z"
+  },
+  {
+   "key": "893b3e18-654e-3991-87cb-f19a597a0bfa",
+   "dataFieldName": "chargingSession.[1].activeChargingTime",
+   "value": "2043",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "2c571b47-cdba-35c0-a4e2-fb4c6cab42a5",
+   "dataFieldName": "aggregation.day.[2].date",
+   "value": "2026-09-15T00:00Z",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "abcf40c1-4780-300d-8231-e411fde8278b",
+   "dataFieldName": "car.brd",
+   "value": "AU"
+  },
+  {
+   "key": "580ed1f6-b894-38fb-b867-1e8502f7fb84",
+   "dataFieldName": "carCapturedTimeStamp.nanos",
+   "value": "331972000",
+   "timestampUtc": "2026-09-23T13:30:00.331Z"
+  },
+  {
+   "key": "92a91c75-8529-3d75-b1b4-9a9b60c392d5",
+   "dataFieldName": "batteryStatus.currentSOC_pct",
+   "value": "51",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "68d2769b-daba-39f6-8cab-c519c83f31e3",
+   "dataFieldName": "chargingStatus.currentChargeState",
+   "value": "NOT_READY_FOR_CHARGING",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "6bfc1511-785e-34e7-9b97-175a9f187fd1",
+   "dataFieldName": "powerCurve.[1].sessionId",
+   "value": "00000000-0000-4000-8000-000000000009",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "7d49f872-1522-3d33-9c0a-1c749eb6ce49",
+   "dataFieldName": "plugStatusItem.chargingPlugType",
+   "value": "DC_COMBO2_OR_TYPE2_AC",
+   "timestampUtc": "2026-09-23T15:24:30.356Z"
+  },
+  {
+   "key": "5f56a24c-6fd8-3d35-9231-e2adf1de58a4",
+   "dataFieldName": "usr.cfg",
+   "value": "17",
+   "timestampUtc": "2026-09-22T10:22:23.5920Z"
+  },
+  {
+   "key": "fa653e29-aadd-3af0-aae2-5e6ce2c6ccc8",
+   "dataFieldName": "chargingSession.[9].chargeType",
+   "value": "AC",
+   "timestampUtc": "1970-01-21T17:15:34.214Z"
+  },
+  {
+   "key": "68cad322-6eac-3ea0-a584-fc278aef7e25",
+   "dataFieldName": "vehicleIdentifier",
+   "value": "00000000000000000000000000000002",
+   "timestampUtc": "2026-09-23T13:30:00.331Z"
+  },
+  {
+   "key": "8711ad0f-6979-3803-824a-927555cb785d",
+   "dataFieldName": "vehiclePlatform",
+   "value": "PPE",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "893b3e18-654e-3991-87cb-f19a597a0bfa",
+   "dataFieldName": "chargingSession.[4].activeChargingTime",
+   "value": "9359",
+   "timestampUtc": "1970-01-21T17:10:03.396Z"
+  },
+  {
+   "key": "f09e68f1-f0ec-3753-97c5-90a92a7023db",
+   "dataFieldName": "aggregation.month.[1].date",
+   "value": "2026-09-01T00:00Z",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "127cba6d-8845-3f53-b830-a0f1c321db3b",
+   "dataFieldName": "chargingSession.[6].peakChargePower",
+   "value": "11.0",
+   "timestampUtc": "1970-01-21T17:11:54.926Z"
+  },
+  {
+   "key": "8711ad0f-6979-3803-824a-927555cb785d",
+   "dataFieldName": "vehiclePlatform",
+   "value": "PPE",
+   "timestampUtc": "2026-09-23T15:23:24.370Z"
+  },
+  {
+   "key": "2eb82c1f-a894-3b5a-b4b4-87a913f052d6",
+   "dataFieldName": "chargingSession.[10].endSoc",
+   "value": "51",
+   "timestampUtc": "1970-01-21T17:16:17.059Z"
+  },
+  {
+   "key": "68cad322-6eac-3ea0-a584-fc278aef7e25",
+   "dataFieldName": "vehicleIdentifier",
+   "value": "00000000000000000000000000000002",
+   "timestampUtc": "2026-09-23T15:23:24.370Z"
+  },
+  {
+   "key": "cc3089cf-615e-334d-9318-8621739d7aa0",
+   "dataFieldName": "envelope.[3].context.causedBy",
+   "value": "VEHICLE_INITIATED",
+   "timestampUtc": "2026-09-23T13:30:00.332Z"
+  },
+  {
+   "key": "93402ef3-db06-39ac-9ad2-9273c79a6984",
+   "dataFieldName": "powerCurve.[1].timeCurve.[1].timestamp",
+   "value": "2026-09-14T20:55:44Z",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "3c607d9a-4b9b-3630-b8c9-0e414caaaa6a",
+   "dataFieldName": "causedBy",
+   "value": "VEHICLE_INITIATED",
+   "timestampUtc": "2026-09-23T15:23:24.370Z"
+  },
+  {
+   "key": "75809f99-197d-33c8-949c-b475ca093213",
+   "dataFieldName": "plugStatusItem.flapLockState",
+   "value": "INVALID",
+   "timestampUtc": "2026-09-23T15:24:30.356Z"
+  },
+  {
+   "key": "a7470e05-15ce-377c-9285-10e7f3c93530",
+   "dataFieldName": "powerCurve.[1].timeCurve.[1].deltaChargeEnergy",
+   "value": "0.0",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "42644a52-f5e1-33bb-bd38-adecd9f2bcd6",
+   "dataFieldName": "state.threshold",
+   "value": "80",
+   "timestampUtc": "2026-09-23T15:23:24.370Z"
+  },
+  {
+   "key": "8070699a-1c6e-3fcf-886a-776d7a871553",
+   "dataFieldName": "chargingSession.[2].sessionId",
+   "value": "00000000-0000-4000-8000-000000000010",
+   "timestampUtc": "1970-01-21T17:05:29.910Z"
+  },
+  {
+   "key": "893b3e18-654e-3991-87cb-f19a597a0bfa",
+   "dataFieldName": "chargingSession.[7].activeChargingTime",
+   "value": "2176",
+   "timestampUtc": "1970-01-21T17:13:20.137Z"
+  },
+  {
+   "key": "55dc1766-11b2-39a1-9b04-b4297944a0a3",
+   "dataFieldName": "car.yer",
+   "value": "2027"
+  },
+  {
+   "key": "184e64c9-956b-34c2-b521-0fd9edbbc151",
+   "dataFieldName": "carCapturedTimeStamp.seconds",
+   "value": "1790177070",
+   "timestampUtc": "2026-09-23T15:24:30.356Z"
+  },
+  {
+   "key": "fcdb4f3e-791b-397d-be8b-71c0f742199b",
+   "dataFieldName": "envelope.[3].context.backendCapturedTimestamp.nanos",
+   "value": "795000000",
+   "timestampUtc": "2026-09-23T13:30:00.332Z"
+  },
+  {
+   "key": "36301b86-250b-39a0-9a49-eb179d5129a6",
+   "dataFieldName": "chargingSession.[5].startChargingTimestamp",
+   "value": "2026-09-19T09:25:03Z",
+   "timestampUtc": "1970-01-21T17:10:18.484Z"
+  },
+  {
+   "key": "fa653e29-aadd-3af0-aae2-5e6ce2c6ccc8",
+   "dataFieldName": "chargingSession.[1].chargeType",
+   "value": "DC",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "0e0938c2-2d39-32c4-868c-4b14d0a63734",
+   "dataFieldName": "envelope.[3].context.trackingIdentifier",
+   "value": "0000000000000000000000000000000B",
+   "timestampUtc": "2026-09-23T13:30:00.332Z"
+  },
+  {
+   "key": "c7d88417-1103-32b5-8e18-a756476d77a9",
+   "dataFieldName": "envelope.[3].report.timers.id",
+   "value": "1",
+   "timestampUtc": "2026-09-23T13:30:00.332Z"
+  },
+  {
+   "key": "b2ff5b94-b9cc-3abb-8d26-1a7f6e3dab4b",
+   "dataFieldName": "aggregation.day.[5].chargedEnergy",
+   "value": "15.0",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "5f56a24c-6fd8-3d35-9231-e2adf1de58a4",
+   "dataFieldName": "usr.cfg",
+   "value": "17",
+   "timestampUtc": "2026-09-22T12:49:46.9590Z"
+  },
+  {
+   "key": "58dbac4d-7c40-3cac-af13-3513ae0b9ad2",
+   "dataFieldName": "envelope.[1].context.carCapturedTimeStamp.nanos",
+   "value": "261841000",
+   "timestampUtc": "2026-09-23T13:30:00.261Z"
+  },
+  {
+   "key": "a1a1693b-9f24-3715-8b49-d4b65228e939",
+   "dataFieldName": "envelope.[1].report.climatizationElementSettings.zoneFrontRightEnabled",
+   "value": "true",
+   "timestampUtc": "2026-09-23T13:30:00.261Z"
+  },
+  {
+   "key": "96d6dde5-96bd-3442-afea-1a95e96b224d",
+   "dataFieldName": "envelope.[1].report.targetTemperature.unit",
+   "value": "CELSIUS",
+   "timestampUtc": "2026-09-23T13:30:00.261Z"
+  },
+  {
+   "key": "5642265f-9edd-3ab5-b9ca-ec4aa654d532",
+   "dataFieldName": "trp.odoS",
+   "value": "565049.0",
+   "timestampUtc": "2026-09-22T12:49:46.9590Z"
+  },
+  {
+   "key": "b2ff5b94-b9cc-3abb-8d26-1a7f6e3dab4b",
+   "dataFieldName": "aggregation.day.[7].chargedEnergy",
+   "value": "1.5",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "5ca823e6-b750-3e12-a2a4-0d227bf118e6",
+   "dataFieldName": "envelope.[3].context.payloadType",
+   "value": "CLIMA_TIMER_STATE_REPORT",
+   "timestampUtc": "2026-09-23T13:30:00.332Z"
+  },
+  {
+   "key": "36301b86-250b-39a0-9a49-eb179d5129a6",
+   "dataFieldName": "chargingSession.[10].startChargingTimestamp",
+   "value": "2026-09-23T13:38:29Z",
+   "timestampUtc": "1970-01-21T17:16:17.059Z"
+  },
+  {
+   "key": "3b917097-b2a7-33c9-aab2-b5098500f951",
+   "dataFieldName": "envelope.[1].report.messageId",
+   "value": "00000000-0000-4000-8000-000000000007",
+   "timestampUtc": "2026-09-23T13:30:00.261Z"
+  },
+  {
+   "key": "184e64c9-956b-34c2-b521-0fd9edbbc151",
+   "dataFieldName": "carCapturedTimeStamp.seconds",
+   "value": "1789526515",
+   "timestampUtc": "2026-09-16T02:41:55.000Z"
+  },
+  {
+   "key": "2e17180d-f6e3-3596-a806-adf1e7c2115e",
+   "dataFieldName": "trp.idlSec",
+   "value": "0.0",
+   "timestampUtc": "2026-09-22T13:01:21.5090Z"
+  },
+  {
+   "key": "2c571b47-cdba-35c0-a4e2-fb4c6cab42a5",
+   "dataFieldName": "aggregation.day.[6].date",
+   "value": "2026-09-20T00:00Z",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "ff9f7ba1-d466-390c-bb77-434d20602778",
+   "dataFieldName": "envelope.[0].context.backendCapturedTimestamp.seconds",
+   "value": "1789407492",
+   "timestampUtc": "N/A"
+  },
+  {
+   "key": "2eb82c1f-a894-3b5a-b4b4-87a913f052d6",
+   "dataFieldName": "chargingSession.[2].endSoc",
+   "value": "100",
+   "timestampUtc": "1970-01-21T17:05:29.910Z"
+  },
+  {
+   "key": "2e17180d-f6e3-3596-a806-adf1e7c2115e",
+   "dataFieldName": "trp.idlSec",
+   "value": "0.0",
+   "timestampUtc": "2026-09-22T10:22:23.5920Z"
+  },
+  {
+   "key": "2eb82c1f-a894-3b5a-b4b4-87a913f052d6",
+   "dataFieldName": "chargingSession.[1].endSoc",
+   "value": "96",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "03342c0c-903c-3d68-86bb-c8fe9873d404",
+   "dataFieldName": "envelope.[1].report.climatizationElementSettings.zoneFrontLeftEnabled",
+   "value": "true",
+   "timestampUtc": "2026-09-23T13:30:00.261Z"
+  },
+  {
+   "key": "738b4751-04fe-3576-8d77-c182b38bde63",
+   "dataFieldName": "chargingSession.[10].chargeMode.[2]",
+   "value": "immediatelyStopped",
+   "timestampUtc": "1970-01-21T17:16:17.059Z"
+  },
+  {
+   "key": "db88b48c-e9f1-3e90-b428-c59ba303976f",
+   "dataFieldName": "chargingStatus.chargeType",
+   "value": "AC",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "5ff11073-47fb-3023-b4e5-189b09bf21a0",
+   "dataFieldName": "maxChargingCurrent",
+   "value": "INVALID",
+   "timestampUtc": "2026-09-23T13:30:00.331Z"
+  },
+  {
+   "key": "872a6fcd-77d0-3a6d-9051-ccd8356bab56",
+   "dataFieldName": "chargingSession.[4].deltaSoc",
+   "value": "3",
+   "timestampUtc": "1970-01-21T17:10:03.396Z"
+  },
+  {
+   "key": "738b4751-04fe-3576-8d77-c182b38bde63",
+   "dataFieldName": "chargingSession.[4].chargeMode.[1]",
+   "value": "immediatelyProfile",
+   "timestampUtc": "1970-01-21T17:10:03.396Z"
+  },
+  {
+   "key": "8c687441-380f-361f-9381-37d1f4a59a71",
+   "dataFieldName": "chargingSession.[7].stopChargingTimestamp",
+   "value": "2026-09-21T14:15:37Z",
+   "timestampUtc": "1970-01-21T17:13:20.137Z"
+  },
+  {
+   "key": "dd8772e3-c6dd-3a60-8ef3-6f7e54efa68e",
+   "dataFieldName": "envelope.[1].context.carCapturedTimeStamp.seconds",
+   "value": "1790170200",
+   "timestampUtc": "2026-09-23T13:30:00.261Z"
+  },
+  {
+   "key": "443a6faf-79e4-37b7-b68a-3ced94be5e41",
+   "dataFieldName": "envelope.[3].report.instrumentClusterTime",
+   "value": "2026-09-23T15:30:00+02:00",
+   "timestampUtc": "2026-09-23T13:30:00.332Z"
+  },
+  {
+   "key": "2c571b47-cdba-35c0-a4e2-fb4c6cab42a5",
+   "dataFieldName": "aggregation.day.[9].date",
+   "value": "2026-09-23T00:00Z",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "872a6fcd-77d0-3a6d-9051-ccd8356bab56",
+   "dataFieldName": "chargingSession.[6].deltaSoc",
+   "value": "17",
+   "timestampUtc": "1970-01-21T17:11:54.926Z"
+  },
+  {
+   "key": "151f4c48-ef88-399e-a0c8-011c7f449d0e",
+   "dataFieldName": "nextChargingTimer.id",
+   "value": "0",
+   "timestampUtc": "2026-09-23T15:04:16.556Z"
+  },
+  {
+   "key": "738b4751-04fe-3576-8d77-c182b38bde63",
+   "dataFieldName": "chargingSession.[7].chargeMode.[1]",
+   "value": "immediatelyProfile",
+   "timestampUtc": "1970-01-21T17:13:20.137Z"
+  },
+  {
+   "key": "142b707d-fff5-359f-a790-1bcf483024d9",
+   "dataFieldName": "INFO_VIN",
+   "value": "WAUZZZ0000000TEST"
+  },
+  {
+   "key": "cce19f5b-7de7-3d46-97f3-820ade18e363",
+   "dataFieldName": "payloadType",
+   "value": "CHARGING_PLUG_REPORT",
+   "timestampUtc": "2026-09-23T15:24:30.356Z"
+  },
+  {
+   "key": "0e0938c2-2d39-32c4-868c-4b14d0a63734",
+   "dataFieldName": "envelope.[2].context.trackingIdentifier",
+   "value": "0000000000000000000000000000000C",
+   "timestampUtc": "2026-09-23T16:06:10.554Z"
+  },
+  {
+   "key": "3c607d9a-4b9b-3630-b8c9-0e414caaaa6a",
+   "dataFieldName": "causedBy",
+   "value": "VEHICLE_INITIATED",
+   "timestampUtc": "2026-09-16T02:41:55.000Z"
+  },
+  {
+   "key": "893b3e18-654e-3991-87cb-f19a597a0bfa",
+   "dataFieldName": "chargingSession.[2].activeChargingTime",
+   "value": "24951",
+   "timestampUtc": "1970-01-21T17:05:29.910Z"
+  },
+  {
+   "key": "16259a84-613a-3372-adfb-9bbfb5d1ffa5",
+   "dataFieldName": "envelope.[0].report.backendError.errorDescription",
+   "value": "Transaction timeout",
+   "timestampUtc": "N/A"
+  },
+  {
+   "key": "8711ad0f-6979-3803-824a-927555cb785d",
+   "dataFieldName": "vehiclePlatform",
+   "value": "PPE",
+   "timestampUtc": "2026-09-23T15:24:30.356Z"
+  },
+  {
+   "key": "36301b86-250b-39a0-9a49-eb179d5129a6",
+   "dataFieldName": "chargingSession.[7].startChargingTimestamp",
+   "value": "2026-09-21T13:39:21Z",
+   "timestampUtc": "1970-01-21T17:13:20.137Z"
+  },
+  {
+   "key": "db47598c-b798-353d-a8a8-9e5866d275de",
+   "dataFieldName": "envelope.[1].report.targetTemperature.temperature",
+   "value": "19.0",
+   "timestampUtc": "2026-09-23T13:30:00.261Z"
+  },
+  {
+   "key": "872a6fcd-77d0-3a6d-9051-ccd8356bab56",
+   "dataFieldName": "chargingSession.[9].deltaSoc",
+   "value": "3",
+   "timestampUtc": "1970-01-21T17:15:34.214Z"
+  },
+  {
+   "key": "dd8772e3-c6dd-3a60-8ef3-6f7e54efa68e",
+   "dataFieldName": "envelope.[3].context.carCapturedTimeStamp.seconds",
+   "value": "1790170200",
+   "timestampUtc": "2026-09-23T13:30:00.332Z"
+  },
+  {
+   "key": "8c687441-380f-361f-9381-37d1f4a59a71",
+   "dataFieldName": "chargingSession.[1].stopChargingTimestamp",
+   "value": "2026-09-14T21:30:34Z",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "b2ff5b94-b9cc-3abb-8d26-1a7f6e3dab4b",
+   "dataFieldName": "aggregation.day.[3].chargedEnergy",
+   "value": "3.5",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "2eb82c1f-a894-3b5a-b4b4-87a913f052d6",
+   "dataFieldName": "chargingSession.[7].endSoc",
+   "value": "64",
+   "timestampUtc": "1970-01-21T17:13:20.137Z"
+  },
+  {
+   "key": "8070699a-1c6e-3fcf-886a-776d7a871553",
+   "dataFieldName": "chargingSession.[6].sessionId",
+   "value": "00000000-0000-4000-8000-000000000013",
+   "timestampUtc": "1970-01-21T17:11:54.926Z"
+  },
+  {
+   "key": "fcdb4f3e-791b-397d-be8b-71c0f742199b",
+   "dataFieldName": "envelope.[2].context.backendCapturedTimestamp.nanos",
+   "value": "213000000",
+   "timestampUtc": "2026-09-23T16:06:10.554Z"
+  },
+  {
+   "key": "65a64947-544d-3636-8e83-01d5b3fc1484",
+   "dataFieldName": "state.notification",
+   "value": "EXTENDED_CHARGING_NOTIFY_BCAM_IS_OFF",
+   "timestampUtc": "2026-09-23T15:23:24.370Z"
+  },
+  {
+   "key": "dd8772e3-c6dd-3a60-8ef3-6f7e54efa68e",
+   "dataFieldName": "envelope.[2].context.carCapturedTimeStamp.seconds",
+   "value": "1790179570",
+   "timestampUtc": "2026-09-23T16:06:10.554Z"
+  },
+  {
+   "key": "be6fb3b0-bf4d-34dd-9237-95bee83b5dd4",
+   "dataFieldName": "envelope.[1].report.climatizationElementSettings.isClimatizationAtUnlock",
+   "value": "true",
+   "timestampUtc": "2026-09-23T13:30:00.261Z"
+  },
+  {
+   "key": "738b4751-04fe-3576-8d77-c182b38bde63",
+   "dataFieldName": "chargingSession.[1].chargeMode.[1]",
+   "value": "immediatelyProfile",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "cce19f5b-7de7-3d46-97f3-820ade18e363",
+   "dataFieldName": "payloadType",
+   "value": "CHARGING_ERROR_REPORT",
+   "timestampUtc": "2026-09-16T02:41:55.000Z"
+  },
+  {
+   "key": "738b4751-04fe-3576-8d77-c182b38bde63",
+   "dataFieldName": "chargingSession.[9].chargeMode.[1]",
+   "value": "immediatelyProfile",
+   "timestampUtc": "1970-01-21T17:15:34.214Z"
+  },
+  {
+   "key": "8711ad0f-6979-3803-824a-927555cb785d",
+   "dataFieldName": "vehiclePlatform",
+   "value": "UNKNOWN",
+   "timestampUtc": "2026-09-23T13:30:00.331Z"
+  },
+  {
+   "key": "8aa756ce-9f70-3a0a-b21f-157ff719b61c",
+   "dataFieldName": "envelope.[1].report.climatizationMode",
+   "value": "MODE_COMFORT",
+   "timestampUtc": "2026-09-23T13:30:00.261Z"
+  },
+  {
+   "key": "2eb82c1f-a894-3b5a-b4b4-87a913f052d6",
+   "dataFieldName": "chargingSession.[3].endSoc",
+   "value": "64",
+   "timestampUtc": "1970-01-21T17:08:36.215Z"
+  },
+  {
+   "key": "35439e57-7466-3136-b7d1-0bfe6c5e61b9",
+   "dataFieldName": "chargingStatus.updateReason",
+   "value": "CHARGING",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "ac3b80f1-809a-3655-8688-e47172bf4278",
+   "dataFieldName": "INFO_MODEL",
+   "value": "AU513"
+  },
+  {
+   "key": "872a6fcd-77d0-3a6d-9051-ccd8356bab56",
+   "dataFieldName": "chargingSession.[3].deltaSoc",
+   "value": "3",
+   "timestampUtc": "1970-01-21T17:08:36.215Z"
+  },
+  {
+   "key": "e00b83b8-42e9-3f17-880e-e757518d9b75",
+   "dataFieldName": "vehicleError.errorNumber",
+   "value": "28",
+   "timestampUtc": "2026-09-16T02:41:55.000Z"
+  },
+  {
+   "key": "673d6076-b052-326a-9163-1ae161c2a0b6",
+   "dataFieldName": "trp.odoE",
+   "value": "565049.0",
+   "timestampUtc": "2026-09-22T10:22:23.5920Z"
+  },
+  {
+   "key": "68cad322-6eac-3ea0-a584-fc278aef7e25",
+   "dataFieldName": "vehicleIdentifier",
+   "value": "00000000000000000000000000000002",
+   "timestampUtc": "2026-09-23T13:30:00.000Z"
+  },
+  {
+   "key": "580ed1f6-b894-38fb-b867-1e8502f7fb84",
+   "dataFieldName": "carCapturedTimeStamp.nanos",
+   "value": "331946100",
+   "timestampUtc": "2026-09-23T13:30:00.331Z"
+  },
+  {
+   "key": "93402ef3-db06-39ac-9ad2-9273c79a6984",
+   "dataFieldName": "powerCurve.[1].timeCurve.[2].timestamp",
+   "value": "2026-09-14T20:56:31Z",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "2c571b47-cdba-35c0-a4e2-fb4c6cab42a5",
+   "dataFieldName": "aggregation.day.[8].date",
+   "value": "2026-09-22T00:00Z",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "68cad322-6eac-3ea0-a584-fc278aef7e25",
+   "dataFieldName": "vehicleIdentifier",
+   "value": "00000000000000000000000000000002",
+   "timestampUtc": "2026-09-16T02:41:55.000Z"
+  },
+  {
+   "key": "8ffe9a00-6916-3402-9b7e-fe659cf498e3",
+   "dataFieldName": "plugStatusItem.plugLockState",
+   "value": "UNLOCKED",
+   "timestampUtc": "2026-09-23T15:24:30.356Z"
+  },
+  {
+   "key": "087e56ae-8c7c-3114-a265-c3fa5a5d9c59",
+   "dataFieldName": "batteryStatus.cruisingRange.range",
+   "value": "206",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "cce19f5b-7de7-3d46-97f3-820ade18e363",
+   "dataFieldName": "payloadType",
+   "value": "BCCM_STATE_REPORT",
+   "timestampUtc": "2026-09-23T15:23:24.370Z"
+  },
+  {
+   "key": "aae1c6db-b93f-3a5b-8f64-d67a639f85a4",
+   "dataFieldName": "powerCurve.[1].timeCurve.[3].soc",
+   "value": "61",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "58dbac4d-7c40-3cac-af13-3513ae0b9ad2",
+   "dataFieldName": "envelope.[3].context.carCapturedTimeStamp.nanos",
+   "value": "332525900",
+   "timestampUtc": "2026-09-23T13:30:00.332Z"
+  },
+  {
+   "key": "580ed1f6-b894-38fb-b867-1e8502f7fb84",
+   "dataFieldName": "carCapturedTimeStamp.nanos",
+   "value": "556957000",
+   "timestampUtc": "2026-09-23T15:04:16.556Z"
+  },
+  {
+   "key": "fa653e29-aadd-3af0-aae2-5e6ce2c6ccc8",
+   "dataFieldName": "chargingSession.[5].chargeType",
+   "value": "AC",
+   "timestampUtc": "1970-01-21T17:10:18.484Z"
+  },
+  {
+   "key": "184e64c9-956b-34c2-b521-0fd9edbbc151",
+   "dataFieldName": "carCapturedTimeStamp.seconds",
+   "value": "1790177004",
+   "timestampUtc": "2026-09-23T15:23:24.370Z"
+  },
+  {
+   "key": "fcdb4f3e-791b-397d-be8b-71c0f742199b",
+   "dataFieldName": "envelope.[0].context.backendCapturedTimestamp.nanos",
+   "value": "164555652",
+   "timestampUtc": "N/A"
+  },
+  {
+   "key": "127cba6d-8845-3f53-b830-a0f1c321db3b",
+   "dataFieldName": "chargingSession.[7].peakChargePower",
+   "value": "3.0",
+   "timestampUtc": "1970-01-21T17:13:20.137Z"
+  },
+  {
+   "key": "184e64c9-956b-34c2-b521-0fd9edbbc151",
+   "dataFieldName": "carCapturedTimeStamp.seconds",
+   "value": "1790170200",
+   "timestampUtc": "2026-09-23T13:30:00.331Z"
+  },
+  {
+   "key": "7d49f872-1522-3d33-9c0a-1c749eb6ce49",
+   "dataFieldName": "plugStatusItem.chargingPlugType",
+   "value": "TYPE2_AC",
+   "timestampUtc": "2026-09-23T15:24:30.356Z"
+  },
+  {
+   "key": "3c607d9a-4b9b-3630-b8c9-0e414caaaa6a",
+   "dataFieldName": "causedBy",
+   "value": "VEHICLE_INITIATED",
+   "timestampUtc": "2026-09-23T13:30:00.000Z"
+  },
+  {
+   "key": "8070699a-1c6e-3fcf-886a-776d7a871553",
+   "dataFieldName": "chargingSession.[7].sessionId",
+   "value": "00000000-0000-4000-8000-000000000014",
+   "timestampUtc": "1970-01-21T17:13:20.137Z"
+  },
+  {
+   "key": "e5fdda31-4685-32f2-b8fc-571d168ecbe6",
+   "dataFieldName": "nextChargingTimer.targetChargePercentageReachable",
+   "value": "INVALID",
+   "timestampUtc": "2026-09-23T15:04:16.556Z"
+  },
+  {
+   "key": "8c687441-380f-361f-9381-37d1f4a59a71",
+   "dataFieldName": "chargingSession.[2].stopChargingTimestamp",
+   "value": "2026-09-15T14:22:45Z",
+   "timestampUtc": "1970-01-21T17:05:29.910Z"
+  },
+  {
+   "key": "e60aa986-f8f2-3a20-98a2-7484d0a8ba5d",
+   "dataFieldName": "envelope.[3].report.timers.timer_uuid",
+   "value": "00000000-0000-4000-8000-000000000015",
+   "timestampUtc": "2026-09-23T13:30:00.332Z"
+  },
+  {
+   "key": "738b4751-04fe-3576-8d77-c182b38bde63",
+   "dataFieldName": "chargingSession.[5].chargeMode.[1]",
+   "value": "immediatelyProfile",
+   "timestampUtc": "1970-01-21T17:10:18.484Z"
+  },
+  {
+   "key": "7a6e11ff-c704-36d5-90ac-64e94bde6f53",
+   "dataFieldName": "chargingStatus.maximumChargePowerCurrent_kW",
+   "value": "93.0",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "93402ef3-db06-39ac-9ad2-9273c79a6984",
+   "dataFieldName": "powerCurve.[1].timeCurve.[3].timestamp",
+   "value": "2026-09-14T20:56:37Z",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "916fff91-5bd8-31db-94da-a4c58f503b26",
+   "dataFieldName": "batteryStatus.cruisingRange.unitBeforeConversion",
+   "value": "RANGE_UNIT_KM",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "738b4751-04fe-3576-8d77-c182b38bde63",
+   "dataFieldName": "chargingSession.[10].chargeMode.[1]",
+   "value": "immediatelyProfile",
+   "timestampUtc": "1970-01-21T17:16:17.059Z"
+  },
+  {
+   "key": "2d1ccc6a-40b6-3f8b-8d8f-92c032f57733",
+   "dataFieldName": "envelope.[0].context.transactionID",
+   "value": "00000000-0000-4000-8000-000000000016",
+   "timestampUtc": "N/A"
+  },
+  {
+   "key": "3c607d9a-4b9b-3630-b8c9-0e414caaaa6a",
+   "dataFieldName": "causedBy",
+   "value": "BCCM_SETTINGS_REPORT",
+   "timestampUtc": "2026-09-23T13:30:00.331Z"
+  },
+  {
+   "key": "a4f54c56-8588-37fa-b1ba-1212148ca58d",
+   "dataFieldName": "serviceCardActivated",
+   "value": "false"
+  },
+  {
+   "key": "127cba6d-8845-3f53-b830-a0f1c321db3b",
+   "dataFieldName": "chargingSession.[4].peakChargePower",
+   "value": "3.7",
+   "timestampUtc": "1970-01-21T17:10:03.396Z"
+  },
+  {
+   "key": "cce19f5b-7de7-3d46-97f3-820ade18e363",
+   "dataFieldName": "payloadType",
+   "value": "CHARGING_PROFILE_TIMER_STATE_REPORT",
+   "timestampUtc": "2026-09-23T15:04:16.556Z"
+  },
+  {
+   "key": "127cba6d-8845-3f53-b830-a0f1c321db3b",
+   "dataFieldName": "chargingSession.[9].peakChargePower",
+   "value": "2.8",
+   "timestampUtc": "1970-01-21T17:15:34.214Z"
+  },
+  {
+   "key": "fa653e29-aadd-3af0-aae2-5e6ce2c6ccc8",
+   "dataFieldName": "chargingSession.[8].chargeType",
+   "value": "AC",
+   "timestampUtc": "1970-01-21T17:14:41.357Z"
+  },
+  {
+   "key": "58dbac4d-7c40-3cac-af13-3513ae0b9ad2",
+   "dataFieldName": "envelope.[2].context.carCapturedTimeStamp.nanos",
+   "value": "554757900",
+   "timestampUtc": "2026-09-23T16:06:10.554Z"
+  },
+  {
+   "key": "1afa44b8-2dd0-34d0-8fbd-ceebd72dd493",
+   "dataFieldName": "envelope.[2].report.status",
+   "value": "OFF",
+   "timestampUtc": "2026-09-23T16:06:10.554Z"
+  },
+  {
+   "key": "36301b86-250b-39a0-9a49-eb179d5129a6",
+   "dataFieldName": "chargingSession.[2].startChargingTimestamp",
+   "value": "2026-09-15T07:26:11Z",
+   "timestampUtc": "1970-01-21T17:05:29.910Z"
+  },
+  {
+   "key": "a9dacebb-cfc8-39a6-a5ce-8dc897586e77",
+   "dataFieldName": "trp.tzn",
+   "value": "Etc/GMT-2",
+   "timestampUtc": "2026-09-22T13:01:21.5090Z"
+  },
+  {
+   "key": "63d98e41-7535-3f7b-aea6-a03693849b03",
+   "dataFieldName": "powerCurve.[1].timeCurve.[3].chargePower",
+   "value": "99.70000457763672",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "738b4751-04fe-3576-8d77-c182b38bde63",
+   "dataFieldName": "chargingSession.[8].chargeMode.[2]",
+   "value": "immediatelyStopped",
+   "timestampUtc": "1970-01-21T17:14:41.357Z"
+  },
+  {
+   "key": "6c791449-65f1-3840-99b0-1591bc86259b",
+   "dataFieldName": "envelope.[2].report.trigger",
+   "value": "NO_REASON",
+   "timestampUtc": "2026-09-23T16:06:10.554Z"
+  },
+  {
+   "key": "a7470e05-15ce-377c-9285-10e7f3c93530",
+   "dataFieldName": "powerCurve.[1].timeCurve.[3].deltaChargeEnergy",
+   "value": "0.0",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "5f56a24c-6fd8-3d35-9231-e2adf1de58a4",
+   "dataFieldName": "usr.cfg",
+   "value": "17",
+   "timestampUtc": "2026-09-22T13:01:21.5090Z"
+  },
+  {
+   "key": "a5ab7ad3-b320-3eef-9c6f-daa3e7c3f3d6",
+   "dataFieldName": "envelope.[3].report.timers.isEnabled",
+   "value": "false",
+   "timestampUtc": "2026-09-23T13:30:00.332Z"
+  },
+  {
+   "key": "2c571b47-cdba-35c0-a4e2-fb4c6cab42a5",
+   "dataFieldName": "aggregation.day.[4].date",
+   "value": "2026-09-18T00:00Z",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "8c687441-380f-361f-9381-37d1f4a59a71",
+   "dataFieldName": "chargingSession.[5].stopChargingTimestamp",
+   "value": "2026-09-19T11:48:04Z",
+   "timestampUtc": "1970-01-21T17:10:18.484Z"
+  },
+  {
+   "key": "893b3e18-654e-3991-87cb-f19a597a0bfa",
+   "dataFieldName": "chargingSession.[8].activeChargingTime",
+   "value": "7282",
+   "timestampUtc": "1970-01-21T17:14:41.357Z"
+  },
+  {
+   "key": "b2ff5b94-b9cc-3abb-8d26-1a7f6e3dab4b",
+   "dataFieldName": "aggregation.day.[4].chargedEnergy",
+   "value": "3.5",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "738b4751-04fe-3576-8d77-c182b38bde63",
+   "dataFieldName": "chargingSession.[3].chargeMode.[1]",
+   "value": "immediatelyStopped",
+   "timestampUtc": "1970-01-21T17:08:36.215Z"
+  },
+  {
+   "key": "63d98e41-7535-3f7b-aea6-a03693849b03",
+   "dataFieldName": "powerCurve.[1].timeCurve.[1].chargePower",
+   "value": "0.0",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "6e4f922f-e595-3fde-8def-6c5fc94db9ae",
+   "dataFieldName": "immediate_charging",
+   "value": "true",
+   "timestampUtc": "2026-09-23T13:30:00.000Z"
+  },
+  {
+   "key": "cce19f5b-7de7-3d46-97f3-820ade18e363",
+   "dataFieldName": "payloadType",
+   "value": "CHARGING_SETTINGS_REPORT",
+   "timestampUtc": "2026-09-23T13:30:00.331Z"
+  },
+  {
+   "key": "9a135c8c-bf2c-3796-9b6e-55034f17a969",
+   "dataFieldName": "envelope.[1].report.climatizationElementSettings.zoneRearRightEnabled",
+   "value": "true",
+   "timestampUtc": "2026-09-23T13:30:00.261Z"
+  },
+  {
+   "key": "2eb82c1f-a894-3b5a-b4b4-87a913f052d6",
+   "dataFieldName": "chargingSession.[8].endSoc",
+   "value": "64",
+   "timestampUtc": "1970-01-21T17:14:41.357Z"
+  },
+  {
+   "key": "14152d54-f9e5-30f9-ad9d-1b9fed60733b",
+   "dataFieldName": "plugStatusItem.flap_open_state",
+   "value": "CLOSE",
+   "timestampUtc": "2026-09-23T15:24:30.356Z"
+  },
+  {
+   "key": "cce19f5b-7de7-3d46-97f3-820ade18e363",
+   "dataFieldName": "payloadType",
+   "value": "CHARGING_STATE_REPORT",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "8c687441-380f-361f-9381-37d1f4a59a71",
+   "dataFieldName": "chargingSession.[6].stopChargingTimestamp",
+   "value": "2026-09-20T13:13:43Z",
+   "timestampUtc": "1970-01-21T17:11:54.926Z"
+  },
+  {
+   "key": "a9dacebb-cfc8-39a6-a5ce-8dc897586e77",
+   "dataFieldName": "trp.tzn",
+   "value": "Etc/GMT-2",
+   "timestampUtc": "2026-09-22T10:22:23.5920Z"
+  },
+  {
+   "key": "cc3089cf-615e-334d-9318-8621739d7aa0",
+   "dataFieldName": "envelope.[2].context.causedBy",
+   "value": "VEHICLE_INITIATED",
+   "timestampUtc": "2026-09-23T16:06:10.554Z"
+  },
+  {
+   "key": "8c687441-380f-361f-9381-37d1f4a59a71",
+   "dataFieldName": "chargingSession.[10].stopChargingTimestamp",
+   "value": "2026-09-23T14:57:28Z",
+   "timestampUtc": "1970-01-21T17:16:17.059Z"
+  },
+  {
+   "key": "8c687441-380f-361f-9381-37d1f4a59a71",
+   "dataFieldName": "chargingSession.[4].stopChargingTimestamp",
+   "value": "2026-09-19T07:36:34Z",
+   "timestampUtc": "1970-01-21T17:10:03.396Z"
+  },
+  {
+   "key": "557c43e7-606f-3af8-9fe1-fb13c4f59476",
+   "dataFieldName": "vehicleError.errorDescription",
+   "value": "APP_RBC_FailedChargeInfrastructure",
+   "timestampUtc": "2026-09-16T02:41:55.000Z"
+  },
+  {
+   "key": "5642265f-9edd-3ab5-b9ca-ec4aa654d532",
+   "dataFieldName": "trp.odoS",
+   "value": "566476.0",
+   "timestampUtc": "2026-09-22T13:01:21.5090Z"
+  },
+  {
+   "key": "8070699a-1c6e-3fcf-886a-776d7a871553",
+   "dataFieldName": "chargingSession.[9].sessionId",
+   "value": "00000000-0000-4000-8000-000000000017",
+   "timestampUtc": "1970-01-21T17:15:34.214Z"
+  },
+  {
+   "key": "05892a61-5c5b-3ce6-8aac-59c21dcae26f",
+   "dataFieldName": "mdkActivated",
+   "value": "true"
+  },
+  {
+   "key": "8070699a-1c6e-3fcf-886a-776d7a871553",
+   "dataFieldName": "chargingSession.[1].sessionId",
+   "value": "00000000-0000-4000-8000-000000000009",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "0e0938c2-2d39-32c4-868c-4b14d0a63734",
+   "dataFieldName": "envelope.[1].context.trackingIdentifier",
+   "value": "00000000000000000000000000000012",
+   "timestampUtc": "2026-09-23T13:30:00.261Z"
+  },
+  {
+   "key": "36301b86-250b-39a0-9a49-eb179d5129a6",
+   "dataFieldName": "chargingSession.[8].startChargingTimestamp",
+   "value": "2026-09-22T10:32:21Z",
+   "timestampUtc": "1970-01-21T17:14:41.357Z"
+  },
+  {
+   "key": "580ed1f6-b894-38fb-b867-1e8502f7fb84",
+   "dataFieldName": "carCapturedTimeStamp.nanos",
+   "value": "370245100",
+   "timestampUtc": "2026-09-23T15:23:24.370Z"
+  },
+  {
+   "key": "8c687441-380f-361f-9381-37d1f4a59a71",
+   "dataFieldName": "chargingSession.[3].stopChargingTimestamp",
+   "value": "2026-09-17T15:16:19Z",
+   "timestampUtc": "1970-01-21T17:08:36.215Z"
+  },
+  {
+   "key": "184e64c9-956b-34c2-b521-0fd9edbbc151",
+   "dataFieldName": "carCapturedTimeStamp.seconds",
+   "value": "1790175856",
+   "timestampUtc": "2026-09-23T15:04:16.556Z"
+  },
+  {
+   "key": "2eb82c1f-a894-3b5a-b4b4-87a913f052d6",
+   "dataFieldName": "chargingSession.[9].endSoc",
+   "value": "67",
+   "timestampUtc": "1970-01-21T17:15:34.214Z"
+  },
+  {
+   "key": "893b3e18-654e-3991-87cb-f19a597a0bfa",
+   "dataFieldName": "chargingSession.[5].activeChargingTime",
+   "value": "8561",
+   "timestampUtc": "1970-01-21T17:10:18.484Z"
+  },
+  {
+   "key": "872a6fcd-77d0-3a6d-9051-ccd8356bab56",
+   "dataFieldName": "chargingSession.[2].deltaSoc",
+   "value": "15",
+   "timestampUtc": "1970-01-21T17:05:29.910Z"
+  },
+  {
+   "key": "87ccf82a-2880-3c65-9a98-4ba0b2690467",
+   "dataFieldName": "chargingStatus.chargeMode",
+   "value": "IMMEDIATELY_PROFILE",
+   "timestampUtc": "2026-09-23T16:06:41.762Z"
+  },
+  {
+   "key": "184e64c9-956b-34c2-b521-0fd9edbbc151",
+   "dataFieldName": "carCapturedTimeStamp.seconds",
+   "value": "1790170200",
+   "timestampUtc": "2026-09-23T13:30:00.000Z"
+  },
+  {
+   "key": "8070699a-1c6e-3fcf-886a-776d7a871553",
+   "dataFieldName": "chargingSession.[8].sessionId",
+   "value": "00000000-0000-4000-8000-000000000019",
+   "timestampUtc": "1970-01-21T17:14:41.357Z"
+  },
+  {
+   "key": "8711ad0f-6979-3803-824a-927555cb785d",
+   "dataFieldName": "vehiclePlatform",
+   "value": "UNKNOWN",
+   "timestampUtc": "2026-09-23T15:04:16.556Z"
+  },
+  {
+   "key": "673d6076-b052-326a-9163-1ae161c2a0b6",
+   "dataFieldName": "trp.odoE",
+   "value": "567953.0",
+   "timestampUtc": "2026-09-22T13:01:21.5090Z"
+  },
+  {
+   "key": "2eb82c1f-a894-3b5a-b4b4-87a913f052d6",
+   "dataFieldName": "chargingSession.[4].endSoc",
+   "value": "59",
+   "timestampUtc": "1970-01-21T17:10:03.396Z"
+  },
+  {
+   "key": "fa653e29-aadd-3af0-aae2-5e6ce2c6ccc8",
+   "dataFieldName": "chargingSession.[3].chargeType",
+   "value": "AC",
+   "timestampUtc": "1970-01-21T17:08:36.215Z"
+  },
+  {
+   "key": "2c571b47-cdba-35c0-a4e2-fb4c6cab42a5",
+   "dataFieldName": "aggregation.day.[1].date",
+   "value": "2026-09-14T00:00Z",
+   "timestampUtc": "2026-09-23T22:44:47.971Z"
+  },
+  {
+   "key": "fa653e29-aadd-3af0-aae2-5e6ce2c6ccc8",
+   "dataFieldName": "chargingSession.[6].chargeType",
+   "value": "AC",
+   "timestampUtc": "1970-01-21T17:11:54.926Z"
+  },
+  {
+   "key": "872a6fcd-77d0-3a6d-9051-ccd8356bab56",
+   "dataFieldName": "chargingSession.[10].deltaSoc",
+   "value": "0",
+   "timestampUtc": "1970-01-21T17:16:17.059Z"
+  },
+  {
+   "key": "127cba6d-8845-3f53-b830-a0f1c321db3b",
+   "dataFieldName": "chargingSession.[1].peakChargePower",
+   "value": "104.5",
+   "timestampUtc": "1970-01-21T17:03:41.435Z"
+  },
+  {
+   "key": "36301b86-250b-39a0-9a49-eb179d5129a6",
+   "dataFieldName": "chargingSession.[6].startChargingTimestamp",
+   "value": "2026-09-20T10:13:28Z",
+   "timestampUtc": "1970-01-21T17:11:54.926Z"
+  },
+  {
+   "key": "872a6fcd-77d0-3a6d-9051-ccd8356bab56",
+   "dataFieldName": "chargingSession.[7].deltaSoc",
+   "value": "1",
+   "timestampUtc": "1970-01-21T17:13:20.137Z"
+  },
+  {
+   "key": "4391059d-1fd9-33b2-b378-b165ccce7483",
+   "dataFieldName": "99386",
+   "value": "kein_Anhaenger_erkannt ",
+   "timestampUtc": "2026-09-21 14:42:54"
+  },
+  {
+   "key": "4391059d-1fd9-33b2-b378-b165ccce7483",
+   "dataFieldName": "99386",
+   "value": "kein_Anhaenger_erkannt ",
+   "timestampUtc": "2026-09-21 09:29:23"
+  },
+  {
+   "key": "4391059d-1fd9-33b2-b378-b165ccce7483",
+   "dataFieldName": "99386",
+   "value": "kein_Anhaenger_erkannt ",
+   "timestampUtc": "2026-09-17 12:27:26"
+  },
+  {
+   "key": "4391059d-1fd9-33b2-b378-b165ccce7483",
+   "dataFieldName": "99386",
+   "value": "kein_Anhaenger_erkannt ",
+   "timestampUtc": "2026-09-16 09:50:38"
+  },
+  {
+   "key": "4391059d-1fd9-33b2-b378-b165ccce7483",
+   "dataFieldName": "99386",
+   "value": "kein_Anhaenger_erkannt ",
+   "timestampUtc": "2026-09-19 14:35:26"
+  },
+  {
+   "key": "4391059d-1fd9-33b2-b378-b165ccce7483",
+   "dataFieldName": "99386",
+   "value": "kein_Anhaenger_erkannt ",
+   "timestampUtc": "2026-09-16 18:22:02"
+  },
+  {
+   "key": "4391059d-1fd9-33b2-b378-b165ccce7483",
+   "dataFieldName": "99386",
+   "value": "kein_Anhaenger_erkannt ",
+   "timestampUtc": "2026-09-16 15:38:58"
+  },
+  {
+   "key": "4391059d-1fd9-33b2-b378-b165ccce7483",
+   "dataFieldName": "99386",
+   "value": "kein_Anhaenger_erkannt ",
+   "timestampUtc": "2026-09-18 08:51:11"
+  },
+  {
+   "key": "4391059d-1fd9-33b2-b378-b165ccce7483",
+   "dataFieldName": "99386",
+   "value": "kein_Anhaenger_erkannt ",
+   "timestampUtc": "2026-09-23 04:00:00"
+  }
+ ]
+}
