@@ -46,16 +46,22 @@ pub const AUDI_PORTAL_CLIENT_ID: &str = "cc29b87a-5e9a-4362-aecf-5adea6b01bbb@ap
 /// The scope the portal asks for.
 pub const PORTAL_SCOPE: &str = "openid cars profile";
 
+/// The portal's `state` for Audi: UI locale, data locale and brand, as evcc sends it
+/// (`vehicle/vw/eudataact/api.go` and `types.go`, read on 2026-09-24).
+pub const AUDI_PORTAL_STATE: &str = "de__en__AUDI";
+
 /// The vehicle list endpoint, relative to the portal base.
 const VEHICLES_PATH: &str = "/proxy_api/consent/me/vehicles";
 
-/// What the connector says when the portal refuses to talk about vehicles.
+/// What the connector says when the portal refuses to talk about vehicles right after a login.
 ///
-/// A `403` here does not mean the password was wrong: the login succeeded, the account simply
-/// has not completed the one-time setup in the browser. Saying "invalid credentials" would send
-/// the user to change a password that is perfectly fine.
-const SETUP_MISSING: &str = "portal setup incomplete: open the portal in a browser, accept the \
-consent, link the vehicle and switch on a continuous data request";
+/// A `403` here does not mean the password was wrong: the identity service accepted it. Either
+/// the one-time setup in the browser is missing, or the portal did not turn the login into a
+/// session of its own. The first live test on 2026-09-24 was the second case, on an account whose
+/// setup was complete, so the message must not claim to know which one it is.
+const SETUP_MISSING: &str = "the portal refused the vehicle list right after a successful login: \
+either the one-time setup in the portal is incomplete (consent, vehicle linked, continuous data \
+request), or the portal did not accept the login; run debug-login with --trace-dir to see which";
 
 /// The EU Data Act portal route.
 #[derive(Clone, Debug)]
@@ -147,6 +153,10 @@ pub fn portal_endpoints(base: &Url) -> Endpoints {
         scope: PORTAL_SCOPE.into(),
         x_client_id: String::new(),
         response_type: CODE_RESPONSE_TYPE.into(),
+        // The portal is the confidential client and exchanges the code without our verifier.
+        pkce: false,
+        state: Some(AUDI_PORTAL_STATE.into()),
+        ui_locales: None,
     }
 }
 
@@ -288,7 +298,7 @@ impl EuDataActStrategy {
                 })
             }
             Err(ConnectorError::SessionExpired) => {
-                // The login itself worked; the account has not finished the browser setup.
+                // The identity service accepted the login; the portal did not serve data.
                 tracing::warn!(target: LOG, "{SETUP_MISSING}");
                 Err(ConnectorError::Manufacturer {
                     status: Some(403),
@@ -412,6 +422,12 @@ mod tests {
         );
         assert_eq!(endpoints.client_id, AUDI_PORTAL_CLIENT_ID);
         assert_eq!(endpoints.scope, "openid cars profile");
+        assert!(
+            !endpoints.pkce,
+            "the portal exchanges the code without our verifier"
+        );
+        assert_eq!(endpoints.state.as_deref(), Some("de__en__AUDI"));
+        assert_eq!(endpoints.ui_locales, None);
         assert_eq!(
             endpoints.identity_base.as_str(),
             "https://identity.vwgroup.io/"

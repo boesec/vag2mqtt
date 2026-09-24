@@ -56,6 +56,20 @@ pub struct Endpoints {
     /// with `invalid client`. Both dead ends are recorded in `Docs/reference/audi-auth.md`
     /// sections 1c and 1d.
     pub response_type: String,
+    /// Whether the authorize request carries a PKCE challenge.
+    ///
+    /// The app route needs it. The EU Data Act portal must **not** get one: the portal exchanges
+    /// the code itself without our verifier, so a challenge binds the code to a verifier the
+    /// portal never sends, the exchange fails and the portal ends up without a session. That is
+    /// what the first live portal test on 2026-09-24 ran into.
+    pub pkce: bool,
+    /// A fixed `state`, or `None` for a random one.
+    ///
+    /// The portal reads `state` as `<ui locale>__<data locale>__<brand>`, for Audi
+    /// `de__en__AUDI`, so it cannot be random there.
+    pub state: Option<String>,
+    /// The `ui_locales` parameter, if any.
+    pub ui_locales: Option<String>,
 }
 
 impl Default for Endpoints {
@@ -70,6 +84,9 @@ impl Default for Endpoints {
             scope: "openid profile badge cars dealers vin".into(),
             x_client_id: "59edf286-a9ca-4d34-9421-68da00f72dc8".into(),
             response_type: CODE_RESPONSE_TYPE.into(),
+            pkce: true,
+            state: None,
+            ui_locales: Some("de-DE en-US".into()),
         }
     }
 }
@@ -612,23 +629,34 @@ impl Signin {
         pkce: &Pkce,
         trace: &mut Trace,
     ) -> Result<Exchange, ConnectorError> {
-        let state = random_hex(16);
+        let state = self
+            .endpoints
+            .state
+            .clone()
+            .unwrap_or_else(|| random_hex(16));
         let nonce = random_hex(16);
 
         // Step 1: authorize, chased to the sign-in page.
         let mut authorize = self.endpoints.authorize();
-        authorize
-            .query_pairs_mut()
-            .append_pair("response_type", &self.endpoints.response_type)
-            .append_pair("client_id", &self.endpoints.client_id)
-            .append_pair("redirect_uri", &self.endpoints.redirect_uri)
-            .append_pair("scope", &self.endpoints.scope)
-            .append_pair("state", &state)
-            .append_pair("nonce", &nonce)
-            .append_pair("prompt", "login")
-            .append_pair("ui_locales", "de-DE en-US")
-            .append_pair("code_challenge", &pkce.challenge)
-            .append_pair("code_challenge_method", "S256");
+        {
+            let mut query = authorize.query_pairs_mut();
+            query
+                .append_pair("response_type", &self.endpoints.response_type)
+                .append_pair("client_id", &self.endpoints.client_id)
+                .append_pair("redirect_uri", &self.endpoints.redirect_uri)
+                .append_pair("scope", &self.endpoints.scope)
+                .append_pair("state", &state)
+                .append_pair("nonce", &nonce)
+                .append_pair("prompt", "login");
+            if let Some(locales) = &self.endpoints.ui_locales {
+                query.append_pair("ui_locales", locales);
+            }
+            if self.endpoints.pkce {
+                query
+                    .append_pair("code_challenge", &pkce.challenge)
+                    .append_pair("code_challenge_method", "S256");
+            }
+        }
         let page = self
             .chase_to_page(http, Step::Authorize, authorize, trace)
             .await?;
@@ -812,6 +840,21 @@ impl Signin {
                 );
                 return Err(parsing(step));
             }
+            let path = current.url.path();
+            if ["signin-service", "/consent", "/error"]
+                .iter()
+                .any(|marker| path.contains(marker))
+            {
+                trace.outcome(
+                    step,
+                    &format!("landed on {path}, which is not the portal application"),
+                );
+                return Err(ConnectorError::Manufacturer {
+                    status: Some(current.status.as_u16()),
+                    code: Some(format!("the portal login ended at {path}")),
+                });
+            }
+            trace.outcome(step, &format!("landed on the portal at {path}"));
             return Ok(current);
         }
         Err(parsing(step))

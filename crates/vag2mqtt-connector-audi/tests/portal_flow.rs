@@ -14,7 +14,9 @@ use vag2mqtt_connector_audi::auth::portal::{
 };
 use vag2mqtt_connector_audi::{AudiConnector, AudiTokens, TraceConfig};
 use vag2mqtt_domain::{DataSourceKind, Drivetrain, Secret, Vin};
-use wiremock::matchers::{body_string_contains, header_regex, method, path, query_param};
+use wiremock::matchers::{
+    body_string_contains, header_regex, method, path, query_param, query_param_is_missing,
+};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
 /// The client id the sign-in fixtures were recorded with; it only appears in their form actions.
@@ -74,6 +76,12 @@ impl Servers {
             .and(query_param("response_type", "code"))
             .and(query_param("scope", "openid cars profile"))
             .and(query_param("redirect_uri", redirect_uri.as_str()))
+            .and(query_param("state", "de__en__AUDI"))
+            // The portal exchanges the code without our verifier, so a PKCE challenge would
+            // break its exchange (first live test, 2026-09-24).
+            .and(query_param_is_missing("code_challenge"))
+            .and(query_param_is_missing("code_challenge_method"))
+            .and(query_param_is_missing("ui_locales"))
             .respond_with(ResponseTemplate::new(302).insert_header(
                 "Location",
                 format!("/signin-service/v1/signin/{FIXTURE_CLIENT}@relayState=relay-fixture"),
@@ -358,4 +366,37 @@ async fn trace_files_of_a_portal_login_leak_nothing() {
             );
         }
     }
+}
+
+#[tokio::test]
+async fn a_login_that_ends_on_a_portal_error_page_is_not_a_session() {
+    let servers = Servers::start().await;
+    servers.mount_vehicles(vehicle_list()).await;
+    // The portal fails its own code exchange and sends the browser to an error page.
+    servers.portal.reset().await;
+    Mock::given(method("GET"))
+        .and(path("/"))
+        .respond_with(ResponseTemplate::new(200))
+        .mount(&servers.portal)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/login"))
+        .respond_with(ResponseTemplate::new(302).insert_header("Location", "/error?reason=x"))
+        .mount(&servers.portal)
+        .await;
+    Mock::given(method("GET"))
+        .and(path("/error"))
+        .respond_with(ResponseTemplate::new(200).set_body_string("<html>error</html>"))
+        .mount(&servers.portal)
+        .await;
+    let connector = servers.connector(TraceConfig::disabled());
+
+    let error = connector.login(&credentials()).await.unwrap_err();
+    let ConnectorError::Manufacturer { code, .. } = &error else {
+        panic!("expected a manufacturer error, got {error:?}");
+    };
+    assert!(
+        code.as_deref().unwrap_or_default().contains("/error"),
+        "{code:?}"
+    );
 }
