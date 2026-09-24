@@ -63,6 +63,7 @@ impl Supervisor {
                 configured: false,
                 enabled: false,
                 connected: false,
+                config: None,
             },
             accounts: Vec::new(),
             vehicles: Vec::new(),
@@ -749,8 +750,9 @@ impl State {
             snapshot_at: now,
             mqtt: MqttStatus {
                 configured: mqtt_config.is_some(),
-                enabled: mqtt_config.is_some_and(|c| c.enabled),
+                enabled: mqtt_config.as_ref().is_some_and(|c| c.enabled),
                 connected: self.publisher.as_ref().is_some_and(|p| p.is_connected()),
+                config: mqtt_config,
             },
             accounts: accounts
                 .into_iter()

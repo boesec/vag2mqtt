@@ -1,7 +1,7 @@
 //! The status snapshot the management API reads.
 
 use chrono::{DateTime, Utc};
-use vag2mqtt_domain::{Account, Vehicle, VehicleState};
+use vag2mqtt_domain::{Account, MqttConfig, Vehicle, VehicleState};
 
 /// Everything the UI shows about the running service, refreshed by the supervisor after every
 /// command, task event and stale check.
@@ -28,6 +28,11 @@ pub struct MqttStatus {
     pub enabled: bool,
     /// The publisher has a live broker session.
     pub connected: bool,
+    /// The stored configuration, so the management API can show it without reading the database.
+    ///
+    /// Carries no password: [`MqttConfig`] has no such field, the password lives encrypted in the
+    /// secrets table and never leaves it except towards the broker.
+    pub config: Option<MqttConfig>,
 }
 
 /// An account with the runtime's in-memory extras.

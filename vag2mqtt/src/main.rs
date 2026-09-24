@@ -1,18 +1,17 @@
 //! VAG2MQTT service entry point.
 //!
-//! This binary only wires things together: it reads the bootstrap settings, installs
-//! logging, makes sure the data directory exists and then hands over to the supervisor.
+//! This binary only wires things together: bootstrap settings, logging, the database, the
+//! compiled-in connectors, the supervisor and the management interface. Every rule lives in the
+//! crate that owns it.
 //!
-//! As of WP-06 the supervisor, persistence, MQTT publisher and admin UI are built but not
-//! wired into the service yet; that happens with WP-08, which needs the same runtime handle for
-//! its API. The process therefore starts, reports its configuration and waits for a shutdown
-//! signal. The `debug-login` subcommand is the exception: it runs one login attempt against a
-//! manufacturer account and exits.
+//! The `debug-login` subcommand is the exception: it touches none of this and runs one login
+//! attempt against a manufacturer account (WP-06).
 
 mod cli;
 mod debug_login;
 mod logging;
 mod shutdown;
+mod wiring;
 
 use std::process::ExitCode;
 
@@ -54,14 +53,6 @@ async fn run(cli: Cli) -> Result<()> {
         log_filter = %cli.log,
         "vag2mqtt starting"
     );
-    tracing::warn!(
-        target: "vag2mqtt::app",
-        "this build is the WP-00 skeleton: no accounts, no MQTT and no admin interface yet"
-    );
 
-    shutdown::wait_for_signal().await?;
-
-    tracing::info!(target: "vag2mqtt::app", "shutdown signal received, stopping");
-
-    Ok(())
+    wiring::run(&cli).await
 }

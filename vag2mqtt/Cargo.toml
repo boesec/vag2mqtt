@@ -16,6 +16,7 @@ vag2mqtt-admin.workspace = true
 vag2mqtt-connector-api.workspace = true
 vag2mqtt-connector-audi.workspace = true
 vag2mqtt-domain.workspace = true
+vag2mqtt-mqtt.workspace = true
 vag2mqtt-persistence.workspace = true
 vag2mqtt-runtime.workspace = true
 
