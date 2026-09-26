@@ -7,8 +7,28 @@ brand independent vehicle model and publishes it over MQTT following the
 [mqtt-smarthome](https://github.com/mqtt-smarthome/mqtt-smarthome) conventions. Audi is the
 first supported brand; Volkswagen, Škoda, Seat and Cupra are planned.
 
-> **Status: early development.** The workspace skeleton is in place, the service does not
-> talk to any vehicle yet. See `Docs/Workpackages.md` for what is done and what is next.
+> **Status: paused (since 2026-09-26).** Development is on hold until the manufacturer
+> fixes its side. See [Why development is paused](#why-development-is-paused).
+
+## Why development is paused
+
+Audi's native app backend is closed to third parties, so VAG2MQTT reads Audi vehicles through
+the official **EU Data Act portal** (`eu-data-act.drivesomethinggreater.com`). The login, the
+session handling, vehicle discovery and the processing of data packages are built and tested.
+
+What is missing is data. For the car this is being developed against (an Audi A6 e-tron on the
+PPE platform), the portal delivers the continuous 15 minute data packages **permanently empty**
+(`…_no_content_found.zip`). Only the one-time export, which can take up to 24 hours, carries
+content. Other users report the same for PPE based Audis. Without continuous packages there is
+nothing to publish, so work stays paused until Audi fixes the delivery.
+
+What already works:
+
+- login through the EU Data Act portal, with the session kept encrypted across restarts;
+- discovery of the vehicles linked to the account;
+- download and normalisation of data packages into the vehicle model (state of charge, range,
+  odometer, charging, plug and climatisation);
+- MQTT publishing following mqtt-smarthome, and the embedded admin interface.
 
 ## Design in one paragraph
 
@@ -66,14 +86,7 @@ cargo test --workspace
 | `crates/vag2mqtt-runtime` | Account supervisor and polling scheduler |
 | `crates/vag2mqtt-admin` | Admin API and embedded web UI |
 | `vag2mqtt` | The binary; wiring only |
-| `Docs` | Requirements, work packages, reference notes |
-
-## Documentation
-
-- `Docs/VAG2MQTT_Vision_Requirements.md` — vision and requirements (German)
-- `Docs/Workpackages.md` — work package index with status (German)
-- `Docs/roadmap-items/` — one file per work package (German)
-- `CLAUDE.md` — working agreement for AI coding agents
+| `fixtures` | Anonymised manufacturer responses used by the tests |
 
 ## Relationship to other projects
 
@@ -81,7 +94,13 @@ The [CarConnectivity](https://github.com/tillsteinbach/CarConnectivity) family o
 used as a technical reference for authentication flows, endpoints and known quirks. VAG2MQTT
 is not a port of it: it shares no architecture, object model or code, and it is written in
 Rust rather than Python. Endpoints and parameters taken from a reference are documented with
-their source under `Docs/reference/`.
+their source in the code that uses them.
+
+## How it was built
+
+VAG2MQTT is developed with [Claude Code](https://claude.com/claude-code) as co-author: the code,
+the tests and the reverse engineering notes were written in pair work between the maintainer and
+Claude, Anthropic's AI model. Commits made that way carry a `Co-Authored-By: Claude` trailer.
 
 ## Licence
 

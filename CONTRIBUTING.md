@@ -14,10 +14,16 @@ That is all. There is no contributor licence agreement to sign.
 
 ## Before you send code
 
-Read [CLAUDE.md](CLAUDE.md). It is written for AI agents but it documents the
-rules that apply to everyone: the crate layout and its dependency rules, the
-handling of secrets, the three state value semantics, and the work package
-workflow in `Docs/roadmap-items/`.
+The rules that apply to everyone:
+
+- **Crate layout.** `domain` depends on nothing internal; connectors depend only
+  on `connector-api` and `domain`; `mqtt` never sees a brand specific type.
+- **Secrets never leak.** Passwords, tokens and cookies live in `Secret<T>` and
+  never reach logs, errors, MQTT payloads, the UI or fixtures.
+- **Three states, not one null.** Every vehicle value is *unsupported*,
+  *unavailable* or *present*. Never invent a default value.
+- **Tolerant parsing.** Manufacturer responses are parsed with every field
+  optional and unknown fields ignored.
 
 Run these and make sure they pass:
 
@@ -39,6 +45,5 @@ in the issue before attaching it.
 ## Reverse engineering findings
 
 If you work out an endpoint, a header or an authentication step, please document
-it under `Docs/reference/` with a link to where you found it, rather than only
-putting it in code. That keeps the manufacturer facing parts auditable when an
-API changes.
+it in the doc comment of the code that uses it, with a link to where you found
+it. That keeps the manufacturer facing parts auditable when an API changes.

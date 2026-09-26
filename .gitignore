@@ -24,6 +24,11 @@
 /*.json
 /*.zip
 
+# Project planning and agent instructions stay local; they are not published
+/Docs/
+/CLAUDE.md
+/AGENTS.md
+
 # Editors and operating systems
 .idea/
 *.swp
