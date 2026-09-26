@@ -291,6 +291,10 @@ impl Task {
             }
             AccountCommand::VehiclesChanged => {
                 self.reload_vehicles().await;
+                // The supervisor refreshed its status snapshot when it sent this command, which
+                // may have been before the new vehicle states were written. Reporting makes it
+                // refresh again now, instead of at its next stale check.
+                self.report().await;
             }
             AccountCommand::RefreshNow(vin) => {
                 if !self.auth_failed {
@@ -367,10 +371,14 @@ impl Task {
         for vehicle in &vehicles {
             let previous = self.vehicles.iter().find(|v| v.vin == vehicle.vin);
             let was_enabled = previous.is_none_or(|p| p.enabled);
-            if !vehicle.enabled && was_enabled {
+            // Compared against the stored data state, not only against the previous list: the
+            // list may have been reloaded from the database for another reason after the flag
+            // changed, and a missed transition would leave a disabled vehicle `fresh` for good.
+            let marked_disabled = vehicle.data_state == VehicleDataState::Disabled;
+            if !vehicle.enabled && !marked_disabled {
                 self.set_vehicle_state(&vehicle.vin, VehicleDataState::Disabled, None, None)
                     .await;
-            } else if vehicle.enabled && !was_enabled {
+            } else if vehicle.enabled && (!was_enabled || marked_disabled) {
                 self.set_vehicle_state(&vehicle.vin, VehicleDataState::Pending, None, None)
                     .await;
                 if !self.auth_failed {

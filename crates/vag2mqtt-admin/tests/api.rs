@@ -340,9 +340,14 @@ async fn creating_an_account_runs_the_whole_flow_and_shows_up_in_status() {
     let api = start().await;
     let id = api.create_account().await;
 
-    // Adding an account means login, discovery and a first poll, all without a restart.
+    // Adding an account means login, discovery and a first poll, all without a restart. The
+    // connector counts a fetch before the status snapshot shows its result, so wait for both.
     api.wait_for("the first fetch", T, || {
         api.audi.counters().fetches_of(&vin("0TEST")) >= 1
+    })
+    .await;
+    api.wait_for("the vehicle in the status", T, || {
+        api.runtime.current_status().vehicles.len() == 1
     })
     .await;
 
@@ -449,14 +454,28 @@ async fn vehicle_endpoints_read_and_write() {
     .await;
     let path = "/api/vehicles/WAUZZZ0000000TEST";
 
+    // The connector counts a fetch before the runtime has stored its result and refreshed its
+    // status snapshot, so wait for what is asserted: the vehicle with a stored state.
+    let deadline = std::time::Instant::now() + T;
+    let body = loop {
+        let (status, body) = api.get(path).await;
+        if (status == StatusCode::OK && body["has_state"].as_bool() == Some(true))
+            || std::time::Instant::now() > deadline
+        {
+            assert_eq!(status, StatusCode::OK);
+            break body;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+    };
+    assert_eq!(body["vin"], "WAUZZZ0000000TEST");
+    assert!(
+        body["has_state"].as_bool().unwrap(),
+        "no state stored within {T:?}"
+    );
+
     let (status, body) = api.get("/api/vehicles").await;
     assert_eq!(status, StatusCode::OK);
     assert_eq!(body.as_array().unwrap().len(), 1);
-
-    let (status, body) = api.get(path).await;
-    assert_eq!(status, StatusCode::OK);
-    assert_eq!(body["vin"], "WAUZZZ0000000TEST");
-    assert!(body["has_state"].as_bool().unwrap());
 
     let (status, body) = api.get(&format!("{path}/state")).await;
     assert_eq!(status, StatusCode::OK);

@@ -253,6 +253,15 @@ async fn the_whole_setup_works_through_the_interface() {
         ui.audi.counters().fetches_of(&vin()) >= 1
     })
     .await;
+    // The connector counts a fetch before the runtime has stored it and refreshed its status.
+    ui.wait_for("the stored snapshot", || {
+        ui.runtime
+            .current_status()
+            .vehicles
+            .first()
+            .is_some_and(|v| v.last_state.is_some())
+    })
+    .await;
 
     let (status, body) = ui.get(&format!("/accounts/{id}")).await;
     assert_eq!(status, StatusCode::OK);
@@ -295,6 +304,15 @@ async fn every_action_works_without_javascript() {
     let id = ui.add_account().await;
     ui.wait_for("the first fetch", || {
         ui.audi.counters().fetches_of(&vin()) >= 1
+    })
+    .await;
+    // The connector counts a fetch before the runtime has stored it and refreshed its status.
+    ui.wait_for("the stored snapshot", || {
+        ui.runtime
+            .current_status()
+            .vehicles
+            .first()
+            .is_some_and(|v| v.last_state.is_some())
     })
     .await;
 
