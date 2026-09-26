@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 
-/// The MQTT broker connection (FR-014).
+/// The MQTT broker connection.
 ///
 /// The password is deliberately not a field: it travels next to the config as a
 /// [`Secret<String>`](crate::Secret), so this struct stays serialisable and can be shown in the
@@ -43,7 +43,7 @@ impl MqttConfig {
     /// The default keep alive.
     pub const DEFAULT_KEEP_ALIVE: Duration = Duration::from_secs(30);
 
-    /// A configuration with the FR-014 defaults for the given broker.
+    /// A configuration with the default settings for the given broker.
     ///
     /// The caller supplies the client identifier because the domain has no randomness; the
     /// admin layer appends a short random suffix to `vag2mqtt-`.

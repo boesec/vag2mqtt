@@ -31,7 +31,7 @@ pub use status::{VehicleActivity, VehicleConnection, VehicleStatus};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct VehicleState {
     /// When VAG2MQTT fetched this snapshot. The fallback for `ts` on MQTT when a value has no
-    /// manufacturer timestamp of its own (DR-003).
+    /// manufacturer timestamp of its own.
     pub fetched_at: DateTime<Utc>,
     /// Total distance driven.
     pub odometer: Reading<Kilometres>,

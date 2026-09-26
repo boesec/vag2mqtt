@@ -130,7 +130,7 @@ impl Database {
         &self.cipher
     }
 
-    /// Stores the key check on first start and verifies it on every later start (FR-011).
+    /// Stores the key check on first start and verifies it on every later start.
     async fn verify_key_check(&self) -> Result<(), PersistenceError> {
         let stored: Option<StoredKeyCheck> = self.settings().get(KEY_CHECK_SETTING).await?;
         match stored {

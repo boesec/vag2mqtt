@@ -1,6 +1,6 @@
 //! Turns a `VehicleState` into the scalar topics of contract version 1.
 //!
-//! The path table here **is** the contract (`Docs/mqtt-contract.md`); a test keeps the two in
+//! The path table here **is** the contract (`CONTRACT.md` in this crate); a test keeps the two in
 //! sync. `Unsupported` and `Unavailable` readings produce no entry.
 
 use chrono::{DateTime, Utc};

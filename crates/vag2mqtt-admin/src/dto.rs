@@ -252,7 +252,7 @@ impl From<VehicleStatus> for VehicleResponse {
     }
 }
 
-/// The last error of an account or a vehicle (FR-021).
+/// The last error of an account or a vehicle.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ErrorInfo {
     /// When it happened.
@@ -453,7 +453,7 @@ impl ConfigureMqttRequest {
     }
 }
 
-/// `vag2mqtt-` plus eight hex characters, as FR-014 describes.
+/// `vag2mqtt-` plus eight hex characters.
 fn generated_client_id() -> String {
     let suffix: String = uuid::Uuid::new_v4()
         .simple()

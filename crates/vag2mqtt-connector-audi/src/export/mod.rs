@@ -1,5 +1,5 @@
 //! Vehicle data over the EU Data Act portal: find the vehicle's data request, list its packages,
-//! download the new ones and merge them (WP-25 stage 2).
+//! download the new ones and merge them.
 //!
 //! The portal produces a package roughly every fifteen minutes; each one is downloaded exactly
 //! once. What the packages said is kept in the session, so a restart does not lose the last known
@@ -25,7 +25,7 @@ const LOG: &str = "vag2mqtt::fetch";
 /// How many packages the first fetch reads.
 pub(crate) const MAX_BACKFILL: usize = 8;
 
-/// The suffix the portal gives a package that carries nothing (B-01).
+/// The suffix the portal gives a package that carries nothing.
 const NO_CONTENT_SUFFIX: &str = "_no_content_found.zip";
 
 /// What the connector remembers per vehicle between fetches.

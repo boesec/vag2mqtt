@@ -1,10 +1,10 @@
 //! Logging setup.
 //!
-//! Log targets follow the categories from requirement FR-022, so a filter such as
+//! Log targets follow one category per area (`vag2mqtt::auth`, `vag2mqtt::fetch`, …), so a filter such as
 //! `info,vag2mqtt::auth=debug` turns up the detail for one area only.
 //!
 //! Secrets, full VINs and coordinates must never reach a log line. The redaction layer
-//! that enforces this arrives with WP-10; until then the rule is upheld by hand.
+//! that would enforce this does not exist yet; until then the rule is upheld by hand.
 
 use anyhow::Context;
 use anyhow::Result;

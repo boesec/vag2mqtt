@@ -9,12 +9,12 @@
 //! Two routes exist:
 //!
 //! - [`auth::portal::EuDataActStrategy`], the default since 2026-09-24: the official EU Data Act
-//!   portal, read only, session held in a cookie jar (WP-25).
+//!   portal, read only, session held in a cookie jar.
 //! - [`auth::form::FormLoginStrategy`], the native myAudi route: its token exchange is refused
 //!   for a public client, so it does not reach tokens today. The portal reuses four of its five
 //!   steps, which is why it stays.
 //!
-//! Endpoints, parameters and their sources are documented in `Docs/reference/audi-auth.md`.
+//! Endpoints, parameters and their sources are documented at the code that uses them.
 
 pub mod auth;
 mod connector;

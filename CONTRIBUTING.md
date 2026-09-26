@@ -17,7 +17,9 @@ That is all. There is no contributor licence agreement to sign.
 The rules that apply to everyone:
 
 - **Crate layout.** `domain` depends on nothing internal; connectors depend only
-  on `connector-api` and `domain`; `mqtt` never sees a brand specific type.
+  on `connector-api` and `domain`; `mqtt` never sees a brand specific type;
+  `admin` depends on `runtime` and `persistence` only, and nothing depends on
+  `admin`. The binary is wiring and the only place that names a brand crate.
 - **Secrets never leak.** Passwords, tokens and cookies live in `Secret<T>` and
   never reach logs, errors, MQTT payloads, the UI or fixtures.
 - **Three states, not one null.** Every vehicle value is *unsupported*,

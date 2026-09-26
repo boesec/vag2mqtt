@@ -5,7 +5,7 @@
 //! crate that owns it.
 //!
 //! The `debug-login` subcommand is the exception: it touches none of this and runs one login
-//! attempt against a manufacturer account (WP-06).
+//! attempt against a manufacturer account.
 
 mod cli;
 mod debug_login;

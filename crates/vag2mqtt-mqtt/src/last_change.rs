@@ -13,7 +13,7 @@ struct Entry {
 
 /// Remembers the last value and last-change time per topic.
 ///
-/// Seeded from the persisted snapshot after a restart (WP-02 stores what
+/// Seeded from the persisted snapshot after a restart (persistence stores what
 /// [`export_under`](Self::export_under) returns), so `lc` survives restarts.
 #[derive(Clone, Debug, Default)]
 pub struct LastChangeTracker {

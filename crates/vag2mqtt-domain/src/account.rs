@@ -10,8 +10,8 @@ use crate::id::{AccountId, Brand};
 
 /// An account as stored and shown, without its credentials or session.
 ///
-/// Credentials and session material are connector-api types (WP-03) and are stored encrypted by
-/// the persistence layer (WP-02); they are never part of this record.
+/// Credentials and session material are connector-api types and are stored encrypted by
+/// the persistence layer; they are never part of this record.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Account {
     /// Internal identifier, also used in MQTT topics.
@@ -39,12 +39,12 @@ pub struct PollingConfig {
     /// The interval between two polls of the same account.
     ///
     /// Serialised as whole seconds under `interval_secs`. A connector may declare a minimum that
-    /// the runtime enforces (FR-013).
+    /// the runtime enforces.
     #[serde(rename = "interval_secs", with = "crate::serde_helpers::duration_secs")]
     pub interval: Duration,
 }
 
-/// The connection state of an account (FR-018, account availability).
+/// The connection state of an account, published as its availability.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AccountConnectionState {
@@ -52,13 +52,13 @@ pub enum AccountConnectionState {
     Pending,
     /// Authenticated and delivering data.
     Ok,
-    /// Credentials rejected, or two factor / CAPTCHA required. No automatic retry (ER-005).
+    /// Credentials rejected, or two factor / CAPTCHA required. No automatic retry.
     AuthError,
-    /// The manufacturer signalled a rate limit; polling is paused (ER-004).
+    /// The manufacturer signalled a rate limit; polling is paused.
     RateLimited,
     /// The manufacturer service cannot be reached.
     Unreachable,
-    /// Repeated failures of another kind (ER-003).
+    /// Repeated failures of another kind.
     Error,
     /// The account is disabled by the user.
     Disabled,

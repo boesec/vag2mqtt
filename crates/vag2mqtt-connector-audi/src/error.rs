@@ -92,7 +92,7 @@ pub(crate) const THROTTLED: &str = "login.error.throttled";
 /// Maps a known identity service error identifier, if `text` contains one.
 ///
 /// Known strings map before any status handling, so a throttled account becomes a rate limit
-/// and not a credential error (which would stop polling for good under ER-005).
+/// and not a credential error (which would stop polling until the user acts).
 pub(crate) fn classify_known_error(text: &str) -> Option<ConnectorError> {
     if text.contains(THROTTLED) {
         return Some(ConnectorError::RateLimited { retry_after: None });

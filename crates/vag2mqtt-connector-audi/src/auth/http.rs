@@ -14,7 +14,7 @@ use crate::cookies::Cookies;
 use crate::error::{Step, network};
 use crate::trace::Trace;
 
-/// The `User-Agent` the reference poses as (`Docs/reference/audi-auth.md` section 2).
+/// The `User-Agent` of the myAudi Android app, which the identity service expects.
 pub(crate) const USER_AGENT: &str = "myAudi-Android/4.14.1 (Build 800238275.2210271555) Android/11";
 
 /// One HTTP response, body already read.
@@ -45,9 +45,8 @@ impl Exchange {
 /// A `reqwest::Client` with a cookie store, rustls, redirects disabled and a timeout.
 ///
 /// Sending cookies is left to `reqwest`, which knows the domain and path rules. Every
-/// `Set-Cookie` is additionally captured into a [`Cookies`] jar, because the EU Data Act portal's
-/// session *is* a cookie and therefore has to outlive the client and be stored per account
-/// (`Docs/roadmap-items/WP-25-audi-eu-data-act.md`).
+/// `Set-Cookie` is additionally captured into a `Cookies` jar, because the EU Data Act portal's
+/// session *is* a cookie and therefore has to outlive the client and be stored per account.
 #[derive(Clone, Debug)]
 pub struct HttpClient {
     client: Client,
@@ -99,7 +98,7 @@ impl HttpClient {
             .unwrap_or_default()
     }
 
-    /// The underlying client, for the vehicle API (WP-07).
+    /// The underlying client.
     pub fn inner(&self) -> &Client {
         &self.client
     }

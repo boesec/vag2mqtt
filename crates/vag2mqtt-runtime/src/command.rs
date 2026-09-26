@@ -6,7 +6,7 @@ use vag2mqtt_domain::{AccountId, Brand, MqttConfig, PollingConfig, Secret, Vin};
 use crate::error::RuntimeError;
 use crate::status::RuntimeStatus;
 
-/// Input for creating an account (FR-004).
+/// Input for creating an account.
 #[derive(Clone, Debug)]
 pub struct AccountCreate {
     /// The brand; a connector must be registered for it.
@@ -96,7 +96,7 @@ impl RuntimeHandle {
         self.status.borrow().clone()
     }
 
-    /// Creates an account and starts the FR-004 flow. Replies once the rows are committed.
+    /// Creates an account and starts login, discovery and polling. Replies once the rows are committed.
     pub async fn create_account(&self, input: AccountCreate) -> Result<AccountId, RuntimeError> {
         match self.send(Command::AccountCreate(input)).await? {
             Reply::AccountId(id) => Ok(id),
@@ -114,7 +114,7 @@ impl RuntimeHandle {
             .await
     }
 
-    /// Stores a new password, forgets the session and triggers a new login (ER-005).
+    /// Stores a new password, forgets the session and triggers a new login.
     pub async fn update_credentials(
         &self,
         id: &AccountId,
@@ -134,7 +134,7 @@ impl RuntimeHandle {
             .await
     }
 
-    /// The manual retry after an authentication error (ER-005).
+    /// The manual retry after an authentication error.
     pub async fn reauthenticate(&self, id: &AccountId) -> Result<(), RuntimeError> {
         self.send_unit(Command::AccountReauthenticate(id.clone()))
             .await
@@ -167,7 +167,7 @@ impl RuntimeHandle {
             .await
     }
 
-    /// Removes the vehicle explicitly (FR-005) and clears its retained topics.
+    /// Removes the vehicle explicitly and clears its retained topics.
     pub async fn delete_vehicle(&self, vin: &Vin) -> Result<(), RuntimeError> {
         self.send_unit(Command::VehicleDelete(vin.clone())).await
     }

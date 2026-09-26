@@ -1,7 +1,7 @@
 //! Every endpoint against a temporary database, the fake connector and a fake publisher.
 //!
 //! The suite records every response body it sees and, at the end of each test, asserts that the
-//! marker password appears in none of them. That is the write-only guarantee from WP-08, checked
+//! marker password appears in none of them. That is the write-only guarantee for secrets, checked
 //! for real rather than per handler.
 
 #![allow(clippy::unwrap_used, clippy::expect_used)]
@@ -246,7 +246,7 @@ async fn health_and_openapi_are_served() {
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn the_openapi_document_describes_exactly_the_routes_that_exist() {
     let document = std::fs::read_to_string(
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../Docs/openapi.yaml"),
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("openapi.yaml"),
     )
     .unwrap();
     let documented = documented_operations(&document);
@@ -271,7 +271,7 @@ async fn the_openapi_document_describes_exactly_the_routes_that_exist() {
     registered_sorted.sort();
     assert_eq!(
         documented_sorted, registered_sorted,
-        "Docs/openapi.yaml and the router's ROUTES list disagree"
+        "openapi.yaml and the router's ROUTES list disagree"
     );
 
     // And every registered operation is actually served: not 404, not 405.
@@ -340,7 +340,7 @@ async fn creating_an_account_runs_the_whole_flow_and_shows_up_in_status() {
     let api = start().await;
     let id = api.create_account().await;
 
-    // FR-004: login, discovery, first poll, all without a restart.
+    // Adding an account means login, discovery and a first poll, all without a restart.
     api.wait_for("the first fetch", T, || {
         api.audi.counters().fetches_of(&vin("0TEST")) >= 1
     })
@@ -464,7 +464,7 @@ async fn vehicle_endpoints_read_and_write() {
     assert!(body["state"]["fetched_at"].is_string());
     assert_eq!(body["state"]["odometer"]["state"], "unsupported");
 
-    // The raw response endpoint exists but has nothing to show yet (WP-07 superseded).
+    // The raw response endpoint exists but has nothing to show yet.
     let (status, body) = api.get(&format!("{path}/raw")).await;
     assert_eq!(status, StatusCode::NOT_FOUND);
     assert_eq!(as_error(&body).error, "not_found");

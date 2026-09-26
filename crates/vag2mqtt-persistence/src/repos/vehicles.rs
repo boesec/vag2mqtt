@@ -137,7 +137,7 @@ impl<'a> Vehicles<'a> {
         vehicle_from_row(&row)
     }
 
-    /// Marks a vehicle as no longer returned by discovery (FR-005). Idempotent: an already
+    /// Marks a vehicle as no longer returned by discovery. Idempotent: an already
     /// missing vehicle keeps its original `missing_since`.
     pub async fn mark_missing(
         &self,
@@ -183,7 +183,7 @@ impl<'a> Vehicles<'a> {
         not_found_if_zero(result.rows_affected(), "vehicle")
     }
 
-    /// Mirrors the runtime's view of the vehicle (FR-021).
+    /// Mirrors the runtime's view of the vehicle.
     pub async fn update_runtime_status(
         &self,
         vin: &Vin,

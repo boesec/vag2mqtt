@@ -3,11 +3,11 @@
 //! These are the only settings that live outside the database. Everything else (accounts,
 //! vehicles, MQTT broker, polling) is configured at runtime through the admin UI or API,
 //! so the service starts on an empty data directory without any configuration file
-//! (requirement FR-002, AD-007).
+//!.
 //!
 //! The master key is deliberately **not** a command line flag: as an argument it would show
 //! up in `--help`, in the process list and in any `Debug` output. It is read from the
-//! `VAG2MQTT_MASTER_KEY` environment variable or the key file instead (WP-02).
+//! `VAG2MQTT_MASTER_KEY` environment variable or the key file instead.
 
 use std::net::SocketAddr;
 use std::path::PathBuf;
@@ -75,7 +75,7 @@ pub(crate) enum Command {
     ///
     /// Touches neither the database nor MQTT. Exactly one attempt per invocation, so it cannot
     /// walk an account into a lockout. Temporary: it goes away once the management interface can
-    /// do the same (WP-09).
+    /// do the same.
     DebugLogin(DebugLogin),
 }
 

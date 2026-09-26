@@ -154,7 +154,7 @@ impl<'a> Accounts<'a> {
         not_found_if_zero(result.rows_affected(), "account")
     }
 
-    /// Mirrors the runtime's view of the account (FR-021).
+    /// Mirrors the runtime's view of the account.
     pub async fn update_runtime_status(
         &self,
         id: &AccountId,

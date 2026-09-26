@@ -11,7 +11,7 @@ use crate::error::PersistenceError;
 /// Name of the key file inside the data directory.
 pub(crate) const KEY_FILE_NAME: &str = "master.key";
 
-/// Where the master key comes from (AD-005).
+/// Where the master key comes from.
 pub enum MasterKeySource {
     /// Sixty-four hex characters, typically from `VAG2MQTT_MASTER_KEY`.
     Provided(Secret<String>),

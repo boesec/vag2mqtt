@@ -1,7 +1,7 @@
 //! Pins the serde representation of a fully populated `VehicleState`.
 //!
 //! The fixture under `tests/fixtures/vehicle_state_full.json` is the contract other crates and
-//! the MQTT `full` payload (WP-04) build on. Changing it is a deliberate act:
+//! the MQTT `full` payload build on. Changing it is a deliberate act:
 //!
 //! ```text
 //! cargo test -p vag2mqtt-domain --test serde_snapshot -- --ignored write_snapshot

@@ -1,5 +1,5 @@
 //! The classic form login: PKCE authorize, two scraped form posts, a manual redirect chase and
-//! one token exchange. Parameters are documented in `Docs/reference/audi-auth.md` section 2.
+//! one token exchange. Client id, scopes and headers are the myAudi app's.
 
 use std::collections::BTreeMap;
 
@@ -53,8 +53,7 @@ pub struct Endpoints {
     ///
     /// `code` is the classic flow and the only one this client is registered for. The hybrid
     /// `code token id_token` would need no token exchange, but the authorize request rejects it
-    /// with `invalid client`. Both dead ends are recorded in `Docs/reference/audi-auth.md`
-    /// sections 1c and 1d.
+    /// with `invalid client`. Both were tried against the live service on 2026-09-23.
     pub response_type: String,
     /// Whether the authorize request carries a PKCE challenge.
     ///
@@ -117,7 +116,9 @@ pub(crate) struct Signin {
 
 /// The classic form login, ending in a token exchange at the Cariad backend.
 ///
-/// The exchange is refused for a public client (`Docs/reference/audi-auth.md` section 1c), so
+/// The exchange is refused for a public client: the token endpoint accepts only
+/// `client_secret_basic` and `client_secret_post`, and the backend answers the app's code with
+/// `invalid assertion headers` (observed 2026-09-23). So
 /// this route does not currently reach tokens against the live service. It stays because the
 /// portal route reuses four of its five steps, and because a reopened route would revive it.
 #[derive(Clone, Debug)]
@@ -250,7 +251,7 @@ pub fn scrape_idk_form(html: &str, client_id: &str, action_path: &str) -> Option
         // The live service sends `"postAction":"login/authenticate"`, relative to the client's
         // sign-in root and **not** to the page URL. Resolving it against the page, whose path
         // already ends in `/login/authenticate`, produces `/login/login/authenticate` and a
-        // HTTP 400. Observed on 2026-09-23; see `Docs/reference/audi-auth.md` section 1b.
+        // HTTP 400. Observed on 2026-09-23.
         Some(action) if is_absolute_action(&action) => action,
         Some(relative) => format!("/signin-service/v1/{client_id}/{relative}"),
         None => format!("/signin-service/v1/{client_id}{action_path}"),
@@ -524,7 +525,7 @@ impl FormLoginStrategy {
     ) -> Result<AudiTokens, ConnectorError> {
         let Some(refresh_token) = &tokens.refresh else {
             // The hybrid flow yields no refresh token, so the runtime has to log in again. It
-            // does exactly that on `SessionExpired`, with the stored password (WP-05).
+            // does exactly that on `SessionExpired`, with the stored password.
             tracing::info!(
                 target: LOG,
                 "this session has no refresh token; a new login is needed"

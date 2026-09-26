@@ -67,7 +67,7 @@ fn fmt_code(code: &Option<String>) -> String {
     code.as_ref().map(|c| format!(": {c}")).unwrap_or_default()
 }
 
-/// What the supervisor does about an error (WP-05).
+/// What the supervisor does about an error.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum ErrorClass {
     /// Credentials are wrong or the account needs human interaction. Stop until the user acts.
@@ -112,7 +112,7 @@ impl ConnectorError {
         }
     }
 
-    /// What the user sees as the error's category (FR-021).
+    /// What the user sees as the error's category.
     pub fn category(&self) -> ErrorCategory {
         match self {
             ConnectorError::InvalidCredentials

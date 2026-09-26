@@ -24,7 +24,7 @@ expect_used = "warn"
 todo = "warn"
 dbg_macro = "warn"
 
-# Internal crates. The dependency edges below mirror the architecture rules in CLAUDE.md
+# Internal crates. The dependency edges below mirror the architecture rules in CONTRIBUTING.md
 # section 4; adding an edge that is not listed there needs a decision, not just an edit.
 [workspace.dependencies]
 vag2mqtt-admin = { path = "crates/vag2mqtt-admin" }

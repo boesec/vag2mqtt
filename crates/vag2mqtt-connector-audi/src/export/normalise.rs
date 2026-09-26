@@ -1,7 +1,7 @@
 //! From export points to the brand-independent [`VehicleState`].
 //!
-//! Every mapping is listed in `Docs/reference/audi-eu-data-act-export.md` section 3. The rule for
-//! the three states (DR-002):
+//! Every mapping is a field name constant below, checked against the fixture. The rule for
+//! the three states:
 //!
 //! - a category the export never carries (doors, windows, position, service, vehicle status,
 //!   remaining times, fuel on an electric car) stays **unsupported**;

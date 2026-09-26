@@ -26,7 +26,7 @@ pub struct Vehicle {
     pub drivetrain: Drivetrain,
     /// Whether the runtime should poll this vehicle. Disabling a vehicle keeps its account.
     pub enabled: bool,
-    /// Set when discovery no longer returns this VIN (FR-005). `None` means the manufacturer
+    /// Set when discovery no longer returns this VIN. `None` means the manufacturer
     /// still lists the vehicle. A missing vehicle is kept, not polled, and shown as unavailable
     /// until the user deletes it explicitly.
     pub missing_since: Option<DateTime<Utc>>,
@@ -48,7 +48,7 @@ impl Vehicle {
     }
 }
 
-/// The data state of a vehicle (FR-018, vehicle availability).
+/// The data state of a vehicle, published as its availability.
 ///
 /// `Fresh` versus `Stale` is decided by the runtime from the age of the last update and the
 /// polling interval; the domain only stores the verdict.

@@ -355,7 +355,7 @@ async fn every_action_works_without_javascript() {
     ui.assert_no_password_rendered();
 }
 
-/// The point of DR-002, on one page.
+/// The point of the three value states, on one page.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn diagnostics_tells_the_three_states_apart() {
     let ui = start().await;
@@ -456,7 +456,7 @@ async fn a_refused_change_explains_itself() {
     ui.assert_no_password_rendered();
 }
 
-/// An account in `auth_error` says so, with the category and the time (FR-021).
+/// An account in `auth_error` says so, with the category and the time.
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn an_authentication_failure_is_explained_on_the_page() {
     let ui = start().await;
@@ -486,7 +486,7 @@ async fn an_authentication_failure_is_explained_on_the_page() {
     ui.assert_no_password_rendered();
 }
 
-/// Nothing is loaded from the network: no CDN, no web font, no external image (NFR-012).
+/// Nothing is loaded from the network: no CDN, no web font, no external image.
 #[test]
 fn no_template_references_an_external_origin() {
     let templates = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("templates");

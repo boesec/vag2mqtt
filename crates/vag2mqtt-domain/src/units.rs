@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::error::DomainError;
 
-/// The physical unit of a value, for documentation and the MQTT contract (WP-04).
+/// The physical unit of a value, for documentation and the MQTT contract.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Unit {

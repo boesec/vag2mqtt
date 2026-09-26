@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use vag2mqtt_domain::{Brand, VehicleState, Vin};
 
-/// The version of the MQTT contract this crate implements (`Docs/mqtt-contract.md`).
+/// The version of the MQTT contract this crate implements (`CONTRACT.md`).
 pub const CONTRACT_VERSION: u32 = 1;
 
 /// The wire convention, as published in `info.spec`.

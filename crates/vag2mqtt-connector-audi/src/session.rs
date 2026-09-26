@@ -104,7 +104,7 @@ impl AudiTokens {
 ///
 /// There is no expiry, because the portal never states one. The route finds out that the
 /// session is gone by being answered `401` or `403`, which it maps onto
-/// [`ConnectorError::SessionExpired`] so the supervisor logs in again (WP-05).
+/// [`ConnectorError::SessionExpired`] so the supervisor logs in again.
 #[derive(Clone)]
 pub(crate) struct PortalSession {
     /// Everything the portal and the identity service set along the way.
@@ -181,7 +181,7 @@ impl PortalSession {
             .and_then(|v| DateTime::parse_from_rfc3339(v).ok())
             .map(|t| t.with_timezone(&Utc))
             .ok_or_else(parsing)?;
-        // Absent in sessions stored before WP-25 stage 2; an unreadable one is dropped rather
+        // Absent in sessions stored before packages were read; an unreadable one is dropped rather
         // than costing the session, since it only holds what the next fetch reads again.
         let vehicles = session
             .payload

@@ -154,7 +154,7 @@ impl From<Vin> for String {
 /// A Volkswagen Group brand.
 ///
 /// Only [`Brand::Audi`] has a connector in the first release. The other variants exist so that
-/// persistence and the UI need no change when WP-22 adds them.
+/// persistence and the UI need no change when their connectors arrive.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Brand {

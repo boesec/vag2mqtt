@@ -239,7 +239,7 @@ async fn mqtt_save(State(state): State<AppState>, Form(form): Form<MqttForm>) ->
         client_id: form.client_id.filter(|value| !value.trim().is_empty()),
         keep_alive_secs: form.keep_alive_secs,
         // The form offers no protocol switch: MQTT 5 is accepted by the API but served with
-        // 3.1.1 until WP-24, so a control for it would promise something we do not do.
+        // 3.1.1 for now, so a control for it would promise something we do not do.
         protocol: None,
         enabled: Some(form.enabled.is_some()),
     };
@@ -586,7 +586,7 @@ async fn diagnostics(State(state): State<AppState>, Path(raw): Path<String>) -> 
         unsupported: count("unsupported"),
         rows,
         has_state: vehicle.last_state.is_some(),
-        // No connector stores raw responses yet: WP-07 is superseded and WP-25 is not started.
+        // No connector stores raw responses yet.
         has_raw: false,
         raw: String::new(),
     })

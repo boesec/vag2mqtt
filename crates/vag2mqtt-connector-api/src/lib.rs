@@ -9,7 +9,6 @@
 //! - [`ConnectorRegistry`]: the compiled-in brands, filled by the binary.
 //! - [`fake::FakeConnector`] (feature `fake`): a scripted connector for tests.
 //!
-//! Implemented by WP-03.
 
 mod connector;
 mod error;

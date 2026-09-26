@@ -18,7 +18,7 @@ use vag2mqtt_runtime::{RuntimeDeps, Supervisor, SystemClock, mqtt_publisher_fact
 use crate::cli::Cli;
 use crate::shutdown;
 
-/// The environment variable the master key may come from (CLAUDE.md section 9).
+/// The environment variable the master key may come from.
 const MASTER_KEY_ENV: &str = "VAG2MQTT_MASTER_KEY";
 
 const LOG: &str = "vag2mqtt::app";
@@ -83,8 +83,8 @@ fn master_key_source() -> MasterKeySource {
     }
 }
 
-/// The connectors this build ships. The only function that names a brand crate (CLAUDE.md
-/// section 4): everything else works through the `Connector` trait.
+/// The connectors this build ships. The only function that names a brand crate: everything
+/// else works through the `Connector` trait.
 fn build_registry() -> Result<ConnectorRegistry> {
     let audi = AudiConnector::new(TraceConfig::from_env())
         .map_err(|error| anyhow::anyhow!("{error}"))

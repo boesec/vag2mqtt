@@ -1,6 +1,6 @@
 /* VAG2MQTT management interface.
    One hand written file, embedded in the binary. No framework, no build step, no web font:
-   everything the page needs travels with the executable (NFR-012). */
+   everything the page needs travels with the executable. */
 
 :root {
   --bg: #11151a;

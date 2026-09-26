@@ -17,7 +17,7 @@ use crate::error::RuntimeError;
 pub type StatePublishReport = BTreeMap<String, i64>;
 
 /// What the account tasks and the supervisor need from a publisher. Implemented by the MQTT
-/// handle of WP-04 and by recording fakes in tests.
+/// handle of `vag2mqtt-mqtt` and by recording fakes in tests.
 pub trait Publisher: Send + Sync {
     /// Publishes a snapshot; returns the `lc` map to persist.
     fn publish_state(
@@ -110,7 +110,7 @@ impl Publisher for MqttHandle {
     }
 }
 
-/// Creates a publisher for a broker configuration. The real one spawns the WP-04 task; tests
+/// Creates a publisher for a broker configuration. The real one spawns the MQTT client task; tests
 /// hand in recording fakes.
 pub type PublisherFactory = Arc<
     dyn Fn(&MqttConfig, Option<&Secret<String>>) -> Result<Arc<dyn Publisher>, RuntimeError>

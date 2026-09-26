@@ -1,0 +1,580 @@
+openapi: 3.1.0
+info:
+  title: VAG2MQTT management API
+  version: "1"
+  description: |
+    Every management function of VAG2MQTT. The service is fully operable through
+    this API alone; the web interface only renders what is here.
+
+    Hand written on purpose: the surface is small and fixed, and a generator would cost a macro
+    heavy dependency. A test compares this document against the router's route list, so the two
+    cannot drift.
+
+    Passwords are write only. They are accepted in request bodies and appear in no response.
+
+    There is no authentication yet. The service binds to 127.0.0.1 by default and logs a warning
+    when bound wider. Access protection is planned.
+  license:
+    name: MIT
+servers:
+  - url: http://127.0.0.1:8080
+    description: the default bind address
+
+paths:
+  /api/health:
+    get:
+      summary: Liveness
+      description: Answers while the process is up. Used by container health checks.
+      responses:
+        "200":
+          description: The service is alive.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, version]
+                properties:
+                  status: { type: string, examples: ["ok"] }
+                  version: { type: string, examples: ["0.1.0"] }
+
+  /api/openapi.yaml:
+    get:
+      summary: This document
+      responses:
+        "200":
+          description: The API description.
+          content:
+            application/yaml:
+              schema: { type: string }
+
+  /api/status:
+    get:
+      summary: Everything at once
+      description: |
+        One snapshot of the whole service: the MQTT connection, every account and every vehicle.
+        Read from the runtime's in-memory snapshot, never from the database.
+      responses:
+        "200":
+          description: The snapshot.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Status" }
+
+  /api/brands:
+    get:
+      summary: The brands this build supports
+      description: What the account form may offer. A brand without a compiled-in connector is not listed.
+      responses:
+        "200":
+          description: The brand list.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [brands]
+                properties:
+                  brands:
+                    type: array
+                    items: { $ref: "#/components/schemas/Brand" }
+
+  /api/mqtt:
+    get:
+      summary: The broker connection
+      description: The stored configuration and the live connection state. Never carries a password.
+      responses:
+        "200":
+          description: The connection.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Mqtt" }
+    put:
+      summary: Configure the broker
+      description: |
+        Replaces the configuration and reconnects the publisher. Omitting `password` keeps the
+        stored one. Takes effect without a restart.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ConfigureMqtt" }
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "422": { $ref: "#/components/responses/Validation" }
+        "502": { $ref: "#/components/responses/MqttFailed" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /api/mqtt/enabled:
+    post:
+      summary: Switch publishing on or off
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Enabled" }
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /api/accounts:
+    get:
+      summary: Every account
+      responses:
+        "200":
+          description: The accounts.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Account" }
+    post:
+      summary: Add an account
+      description: |
+        Creates the account and starts at once: authenticate, discover the
+        vehicles, persist them, begin polling. Answers only after the rows are committed, so a
+        `201` means the account exists.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateAccount" }
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id]
+                properties:
+                  id: { type: string }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "422": { $ref: "#/components/responses/Validation" }
+        "503": { $ref: "#/components/responses/Unavailable" }
+
+  /api/accounts/{id}:
+    get:
+      summary: One account
+      parameters: [{ $ref: "#/components/parameters/AccountId" }]
+      responses:
+        "200":
+          description: The account.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Account" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      summary: Change user name or polling interval
+      parameters: [{ $ref: "#/components/parameters/AccountId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username: { type: string }
+                polling_interval_secs:
+                  type: integer
+                  description: Refused below the connector's minimum, which is 300 for Audi.
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/Validation" }
+    delete:
+      summary: Delete the account
+      description: Stops its task, clears its retained MQTT topics, then removes it and its vehicles.
+      parameters: [{ $ref: "#/components/parameters/AccountId" }]
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/accounts/{id}/credentials:
+    put:
+      summary: Replace the password
+      description: |
+        Stores the new password, forgets the session and logs in again. This is also how an
+        account leaves the `auth_error` state, which no automatic retry ever leaves.
+      parameters: [{ $ref: "#/components/parameters/AccountId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { type: string, writeOnly: true }
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/accounts/{id}/enabled:
+    post:
+      summary: Enable or disable the account
+      parameters: [{ $ref: "#/components/parameters/AccountId" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Enabled" }
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/accounts/{id}/reauthenticate:
+    post:
+      summary: Try logging in again
+      description: The manual retry after an authentication error. Nothing else resumes polling.
+      parameters: [{ $ref: "#/components/parameters/AccountId" }]
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/vehicles:
+    get:
+      summary: Every vehicle
+      responses:
+        "200":
+          description: The vehicles.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Vehicle" }
+
+  /api/vehicles/{vin}:
+    get:
+      summary: One vehicle
+      parameters: [{ $ref: "#/components/parameters/Vin" }]
+      responses:
+        "200":
+          description: The vehicle.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Vehicle" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      summary: Rename the vehicle
+      parameters: [{ $ref: "#/components/parameters/Vin" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                display_name:
+                  type: [string, "null"]
+                  description: null or an empty string clears the name, so the model or the VIN shows again.
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      summary: Remove the vehicle
+      description: |
+        The explicit removal of a vehicle. A vehicle the manufacturer still lists is
+        rediscovered on the next cycle; disable it instead.
+      parameters: [{ $ref: "#/components/parameters/Vin" }]
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/vehicles/{vin}/enabled:
+    post:
+      summary: Enable or disable the vehicle
+      parameters: [{ $ref: "#/components/parameters/Vin" }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Enabled" }
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/vehicles/{vin}/refresh:
+    post:
+      summary: Poll this vehicle now
+      description: One extra fetch, without moving the schedule.
+      parameters: [{ $ref: "#/components/parameters/Vin" }]
+      responses:
+        "200": { $ref: "#/components/responses/Accepted" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/vehicles/{vin}/state:
+    get:
+      summary: The last vehicle state
+      description: |
+        The normalised snapshot, with every value in one of three states: `unsupported`,
+        `unavailable` or `present`. 404 while nothing has been fetched yet.
+      parameters: [{ $ref: "#/components/parameters/Vin" }]
+      responses:
+        "200":
+          description: The snapshot.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [vin, state]
+                properties:
+                  vin: { type: string }
+                  state: { $ref: "#/components/schemas/VehicleState" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/vehicles/{vin}/raw:
+    get:
+      summary: The last raw manufacturer response
+      description: |
+        For the diagnostics page. Always 404 today: no connector stores raw manufacturer
+        responses yet.
+      parameters: [{ $ref: "#/components/parameters/Vin" }]
+      responses:
+        "200":
+          description: The raw response.
+          content:
+            application/json:
+              schema: { type: object }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+components:
+  parameters:
+    AccountId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+      description: The account's internal identifier.
+    Vin:
+      name: vin
+      in: path
+      required: true
+      schema: { type: string }
+      description: Seventeen characters, upper case.
+
+  responses:
+    Accepted:
+      description: Done. The runtime confirmed it before this answer was sent.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [ok]
+            properties:
+              ok: { type: boolean }
+    BadRequest:
+      description: The request could not be read.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: No such entity.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Validation:
+      description: The input was understood but refused.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    MqttFailed:
+      description: The MQTT layer refused the request.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unavailable:
+      description: The runtime did not confirm within ten seconds.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Error:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          enum: [validation, bad_request, not_found, unavailable, mqtt, internal]
+          description: A stable slug. Branch on this, not on the message.
+        message:
+          type: string
+          description: For a human. Carries no internal detail.
+        field:
+          type: string
+          description: The input field at fault, when the problem can be attributed to one.
+        reference:
+          type: string
+          description: |
+            Present only on `internal`. Eight hex characters that also appear in the log, so the
+            cause can be found without the API returning it.
+
+    Brand:
+      type: string
+      enum: [audi, volkswagen, skoda, seat, cupra]
+
+    Enabled:
+      type: object
+      required: [enabled]
+      properties:
+        enabled: { type: boolean }
+
+    Status:
+      type: object
+      required: [started_at, snapshot_at, mqtt, accounts, vehicles]
+      properties:
+        started_at: { type: string, format: date-time }
+        snapshot_at: { type: string, format: date-time }
+        mqtt: { $ref: "#/components/schemas/Mqtt" }
+        accounts:
+          type: array
+          items: { $ref: "#/components/schemas/Account" }
+        vehicles:
+          type: array
+          items: { $ref: "#/components/schemas/Vehicle" }
+
+    Mqtt:
+      type: object
+      required: [configured, enabled, connected]
+      properties:
+        configured: { type: boolean }
+        enabled: { type: boolean }
+        connected: { type: boolean, description: A live session with the broker right now. }
+        config:
+          type: object
+          required: [host, port, tls, topic_prefix, client_id, keep_alive_secs, protocol]
+          properties:
+            host: { type: string }
+            port: { type: integer }
+            username: { type: [string, "null"] }
+            has_password: { type: boolean }
+            tls: { type: boolean }
+            topic_prefix: { type: string }
+            client_id: { type: string }
+            keep_alive_secs: { type: integer }
+            protocol: { type: string, enum: [v3_1_1, v5] }
+
+    ConfigureMqtt:
+      type: object
+      required: [host]
+      properties:
+        host: { type: string }
+        port: { type: integer, default: 1883 }
+        username: { type: [string, "null"] }
+        password:
+          type: string
+          writeOnly: true
+          description: Omit to keep the stored password.
+        tls: { type: boolean, default: false }
+        topic_prefix: { type: string, default: vag2mqtt }
+        client_id:
+          type: string
+          description: Generated as `vag2mqtt-<8 hex>` when omitted.
+        keep_alive_secs: { type: integer, default: 30 }
+        protocol:
+          type: string
+          enum: [v3_1_1, v5]
+          default: v3_1_1
+          description: v5 is accepted but served with 3.1.1 for now.
+        enabled: { type: boolean, default: true }
+
+    CreateAccount:
+      type: object
+      required: [brand, username, password]
+      properties:
+        brand: { $ref: "#/components/schemas/Brand" }
+        username: { type: string }
+        password: { type: string, writeOnly: true }
+        polling_interval_secs:
+          type: integer
+          description: The runtime default (900) when omitted. Refused below the connector minimum.
+        enabled: { type: boolean, default: true }
+
+    Account:
+      type: object
+      required:
+        [id, brand, username, enabled, polling_interval_secs, connection_state,
+         consecutive_failures, respawns, running]
+      properties:
+        id: { type: string }
+        brand: { $ref: "#/components/schemas/Brand" }
+        username: { type: string }
+        enabled: { type: boolean }
+        polling_interval_secs: { type: integer }
+        connection_state:
+          type: string
+          enum: [pending, ok, auth_error, rate_limited, unreachable, error, disabled]
+        last_success_at: { type: [string, "null"], format: date-time }
+        last_error: { $ref: "#/components/schemas/ErrorInfo" }
+        next_poll_at: { type: [string, "null"], format: date-time }
+        consecutive_failures: { type: integer }
+        respawns: { type: integer, description: Restarts after a panic since the service started. }
+        running: { type: boolean }
+
+    Vehicle:
+      type: object
+      required: [vin, account_id, brand, label, drivetrain, enabled, data_state, has_state]
+      properties:
+        vin: { type: string }
+        account_id: { type: string }
+        brand: { $ref: "#/components/schemas/Brand" }
+        model: { type: [string, "null"] }
+        display_name: { type: [string, "null"] }
+        label: { type: string, description: display name, else model, else VIN. }
+        drivetrain: { type: string, enum: [electric, combustion, hybrid, unknown] }
+        enabled: { type: boolean }
+        missing_since:
+          type: [string, "null"]
+          format: date-time
+          description: Set when discovery stopped returning this VIN. Such a vehicle is kept and not polled.
+        data_state:
+          type: string
+          enum: [pending, fresh, stale, unavailable, error, disabled]
+        last_update_at: { type: [string, "null"], format: date-time }
+        last_error: { $ref: "#/components/schemas/ErrorInfo" }
+        has_state: { type: boolean }
+
+    ErrorInfo:
+      type: object
+      required: [at, category, message]
+      properties:
+        at: { type: string, format: date-time }
+        category:
+          type: string
+          enum: [auth, network, rate_limit, manufacturer, parsing, persistence, configuration, internal]
+        message: { type: string }
+
+    Reading:
+      type: object
+      required: [state]
+      description: |
+        One vehicle value in exactly one of three states. `unsupported` means the vehicle
+        has no such capability, `unavailable` means the last fetch delivered nothing, `present`
+        carries the value and the manufacturer's own timestamp.
+      properties:
+        state: { type: string, enum: [unsupported, unavailable, present] }
+        value: { description: Present only when state is `present`. }
+        source_time: { type: [string, "null"], format: date-time }
+
+    VehicleState:
+      type: object
+      required: [fetched_at, odometer, battery, fuel, charging, plug, doors, windows, position,
+                 climatisation, status, service]
+      description: |
+        The normalised snapshot. Every category exists for every vehicle; one the car lacks is
+        filled with `unsupported` readings rather than omitted, so the shape never varies. The
+        authoritative example is
+        `crates/vag2mqtt-domain/tests/fixtures/vehicle_state_full.json`.
+      properties:
+        fetched_at: { type: string, format: date-time }
+        odometer: { $ref: "#/components/schemas/Reading" }
+        battery: { type: object }
+        fuel: { type: object }
+        charging: { type: object }
+        plug: { type: object }
+        doors: { type: object }
+        windows: { type: object }
+        position: { $ref: "#/components/schemas/Reading" }
+        climatisation: { type: object }
+        status: { type: object }
+        service: { type: object }

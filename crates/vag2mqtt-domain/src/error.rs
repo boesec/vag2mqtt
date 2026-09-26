@@ -3,10 +3,10 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-/// Coarse classification of an error for diagnostics (FR-021).
+/// Coarse classification of an error for diagnostics.
 ///
 /// This is the *what*, shown to the user next to the message. Whether an error is worth a
-/// retry is a separate classification that lives with the connector errors (WP-03).
+/// retry is a separate classification that lives with the connector errors.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ErrorCategory {
@@ -42,7 +42,7 @@ impl ErrorCategory {
     ];
 }
 
-/// The last error recorded for an account or a vehicle (FR-021).
+/// The last error recorded for an account or a vehicle.
 ///
 /// `message` is user facing. The layer that creates a `LastError` is responsible for a message
 /// free of secrets; the domain does not scan strings.

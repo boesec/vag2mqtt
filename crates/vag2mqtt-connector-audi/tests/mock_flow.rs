@@ -559,7 +559,7 @@ async fn hybrid_flow_takes_its_tokens_from_the_callback() {
 }
 
 /// Without a refresh token there is nothing to renew, so the connector says the session is gone
-/// and the runtime logs in again (WP-05 behaviour).
+/// and the runtime logs in again.
 #[tokio::test]
 async fn a_session_without_a_refresh_token_reports_session_expired() {
     let server = MockServer::start().await;

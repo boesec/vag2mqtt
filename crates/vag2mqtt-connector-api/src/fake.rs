@@ -1,6 +1,6 @@
 //! A scripted connector for tests (feature `fake`).
 //!
-//! The runtime (WP-05) and the admin layer are tested against this instead of a manufacturer.
+//! The runtime and the admin layer are tested against this instead of a manufacturer.
 //! A [`FakeHandle`] changes the script while the connector is in use and exposes counters.
 
 use std::collections::{HashMap, VecDeque};

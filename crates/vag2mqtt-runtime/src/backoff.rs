@@ -1,4 +1,4 @@
-//! Exponential backoff with jitter (ER-003).
+//! Exponential backoff with jitter.
 
 use std::time::Duration;
 

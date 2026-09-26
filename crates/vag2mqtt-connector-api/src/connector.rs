@@ -25,9 +25,9 @@ pub struct ConnectorInfo {
     /// How it obtains data (requirements section 4.4).
     pub kind: DataSourceKind,
     /// The shortest polling interval the manufacturer tolerates. The runtime and the UI refuse
-    /// anything smaller (FR-013).
+    /// anything smaller.
     pub min_polling_interval: Duration,
-    /// Whether commands towards the vehicle are possible. `false` for every connector until WP-20.
+    /// Whether commands towards the vehicle are possible. `false` for every connector today.
     pub supports_commands: bool,
 }
 
@@ -49,7 +49,7 @@ pub struct DiscoveredVehicle {
 /// - It is stateless apart from its HTTP client. Everything per account lives in the
 ///   [`SessionState`] the runtime passes in, and a connector may refresh tokens inside that state
 ///   during any call. The runtime persists the state after every call that returns `Ok`.
-/// - [`login`](Connector::login) is both "validate credentials" and "authenticate" (FR-004);
+/// - [`login`](Connector::login) is both "validate credentials" and "authenticate";
 ///   the manufacturers offer no separate validation.
 /// - [`fetch_state`](Connector::fetch_state) starts from
 ///   [`VehicleState::unsupported`] and fills what the manufacturer delivers. A category the

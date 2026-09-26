@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 /// One vehicle value in exactly one of three states.
 ///
 /// There is deliberately no `Default`: a connector must decide for every field which state
-/// applies (ER-007). Missing fields in a manufacturer response become [`Reading::Unavailable`]
+/// applies. Missing fields in a manufacturer response become [`Reading::Unavailable`]
 /// when the capability is known to exist, and [`Reading::Unsupported`] when the vehicle declares
 /// that it lacks the capability.
 ///

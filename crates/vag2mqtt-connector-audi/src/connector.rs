@@ -3,8 +3,8 @@
 //! The connector is an adapter and nothing more: the route
 //! ([`AudiAuthStrategy`](crate::auth::AudiAuthStrategy)) decides how the account is reached, what
 //! a session looks like and what `ConnectorInfo` to report. Since 2026-09-24 the default route
-//! is the EU Data Act portal, because both native routes are shut
-//! (`Docs/reference/audi-auth.md` sections 1c and 1d).
+//! is the EU Data Act portal, because both native routes are closed to third parties (see
+//! [`crate::auth::portal`]).
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -21,13 +21,13 @@ use crate::auth::portal::EuDataActStrategy;
 use crate::trace::TraceConfig;
 
 /// The shortest polling interval the native live route tolerates: five minutes, settled on
-/// 2026-09-22 to protect the account (`Docs/reference/audi-auth.md` section 6).
+/// 2026-09-22 to protect the account from being throttled.
 pub const MIN_LIVE_POLLING_INTERVAL: Duration = Duration::from_secs(300);
 
 /// The shortest polling interval the EU Data Act portal is worth asking at.
 ///
 /// The portal produces a data package roughly every fifteen minutes and never sooner, so a
-/// shorter interval would only cost requests (`Docs/reference/audi-auth.md` section 1e).
+/// shorter interval would only cost requests.
 pub const MIN_PORTAL_POLLING_INTERVAL: Duration = Duration::from_secs(900);
 
 /// The minimum interval of the default route, kept for callers that ask the crate rather than

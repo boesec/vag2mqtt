@@ -3,7 +3,7 @@
 ## `one_time_export.json`
 
 A one-time export of an Audi A6 e-tron from the EU Data Act portal, taken on 2026-09-24. What the
-fields mean is in `Docs/reference/audi-eu-data-act-export.md`.
+fields mean is documented in `crates/vag2mqtt-connector-audi/src/export/normalise.rs`.
 
 Changed from the original:
 

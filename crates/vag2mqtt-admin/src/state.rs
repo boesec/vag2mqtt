@@ -11,7 +11,7 @@ pub const COMMAND_TIMEOUT: Duration = Duration::from_secs(10);
 /// Shared state of the API.
 ///
 /// `brands` is handed in rather than read from a connector registry, because the admin layer must
-/// not depend on `vag2mqtt-connector-api` (CLAUDE.md section 4). The binary knows both and passes
+/// not depend on `vag2mqtt-connector-api` (see the crate layout in CONTRIBUTING.md). The binary knows both and passes
 /// the list along.
 #[derive(Clone)]
 pub struct AppState {

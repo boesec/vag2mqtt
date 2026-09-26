@@ -1,6 +1,6 @@
 //! Graceful shutdown.
 //!
-//! The service is meant to run continuously (requirement NFR-002), so it stops only on an
+//! The service is meant to run continuously, so it stops only on an
 //! explicit signal: Ctrl-C everywhere, and additionally SIGTERM on Unix, which is what a
 //! container runtime or systemd sends.
 

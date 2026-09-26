@@ -374,7 +374,7 @@ async fn a_failing_account_does_not_block_another() {
             .unwrap();
     assert_eq!(error.category, ErrorCategory::Auth);
 
-    // The manual retry (ER-005) logs in again.
+    // The manual retry logs in again.
     skoda_handle.clear_login_failure();
     h.handle.reauthenticate(&bad).await.unwrap();
     wait_for(T, || skoda_handle.counters().logins >= 2).await;

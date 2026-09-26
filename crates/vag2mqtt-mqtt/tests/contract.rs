@@ -1,5 +1,5 @@
-//! Keeps `Docs/mqtt-contract.md` and the flattener in sync, and pins the flattening of the
-//! WP-01 fixture.
+//! Keeps `CONTRACT.md` and the flattener in sync, and pins the flattening of the domain
+//! fixture.
 
 #![allow(clippy::unwrap_used, clippy::expect_used)]
 
@@ -23,7 +23,7 @@ fn manifest_dir() -> PathBuf {
 }
 
 fn contract_doc_vehicle_paths() -> BTreeSet<String> {
-    let doc = std::fs::read_to_string(manifest_dir().join("../../Docs/mqtt-contract.md")).unwrap();
+    let doc = std::fs::read_to_string(manifest_dir().join("CONTRACT.md")).unwrap();
     let mut in_vehicle_table = false;
     let mut paths = BTreeSet::new();
     for line in doc.lines() {
@@ -118,7 +118,7 @@ fn contract_doc_and_flattener_agree() {
     );
     assert_eq!(
         doc_paths, declared,
-        "Docs/mqtt-contract.md and the flattener disagree"
+        "CONTRACT.md and the flattener disagree"
     );
 }
 

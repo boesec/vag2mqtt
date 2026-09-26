@@ -2,16 +2,14 @@
 //!
 //! - [`TopicBuilder`]: the single place where topic strings come into existence.
 //! - [`flatten`]: turns a [`VehicleState`](vag2mqtt_domain::VehicleState) into the scalar
-//!   `status/<VIN>/<path>` values of contract version 1 (`Docs/mqtt-contract.md`).
+//!   `status/<VIN>/<path>` values of contract version 1 (`CONTRACT.md` in this crate).
 //! - [`LastChangeTracker`]: keeps `lc` per topic, seedable from persistence.
 //! - [`MqttPublisher`] / [`MqttHandle`]: the rumqttc client task and the cheap handle the runtime
 //!   publishes through.
 //!
-//! Wire conventions follow mqtt-smarthome 2.0 (`Docs/reference/mqtt-smarthome.md`): `connected`
+//! Wire conventions follow mqtt-smarthome 2.0 (<https://github.com/mqtt-smarthome/mqtt-smarthome>): `connected`
 //! tri-state with a last will of `0`, retained `status/*` with `{"val","ts","lc"}` where `ts`
 //! and `lc` are milliseconds since the epoch, and `info` with `name`, `version` and `spec`.
-//!
-//! Implemented by WP-04.
 
 mod error;
 mod flatten;

@@ -8,7 +8,6 @@
 //! The entry point is [`Database::open`]. Repositories are reached through the accessor methods
 //! on [`Database`] (`accounts()`, `vehicles()`, ...). No SQL exists outside this crate.
 //!
-//! Implemented by WP-02.
 
 mod crypto;
 mod database;

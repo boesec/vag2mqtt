@@ -18,7 +18,7 @@ use crate::error::ApiError;
 use crate::state::{AppState, COMMAND_TIMEOUT};
 
 /// The OpenAPI document, embedded so the binary needs no files beside it.
-const OPENAPI: &str = include_str!("../../../Docs/openapi.yaml");
+const OPENAPI: &str = include_str!("../openapi.yaml");
 
 /// One registered route.
 pub struct RouteSpec {
@@ -130,7 +130,7 @@ pub fn router(state: AppState) -> Router {
 
 type ApiResult<T> = Result<Json<T>, ApiError>;
 
-/// Runs a runtime command with the confirmation timeout of WP-08.
+/// Runs a runtime command with the confirmation timeout.
 async fn confirm<T>(
     call: impl Future<Output = Result<T, vag2mqtt_runtime::RuntimeError>>,
 ) -> Result<T, ApiError> {
@@ -403,8 +403,8 @@ async fn vehicle_state(
 
 /// The last raw manufacturer response, for the diagnostics page.
 ///
-/// Always 404 today: storing raw responses belongs to the connector that fetches them, and the
-/// package that was to do it (WP-07) is superseded. WP-25 brings it back.
+/// Always 404 today: storing raw responses belongs to the connector that fetches them, and no
+/// connector does so yet.
 async fn vehicle_raw(
     State(state): State<AppState>,
     Path(raw): Path<String>,

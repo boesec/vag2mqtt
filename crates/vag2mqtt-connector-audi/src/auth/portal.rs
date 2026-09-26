@@ -2,8 +2,10 @@
 //!
 //! Volkswagen Group Info Services AG operates an official portal under the EU Data Act at
 //! `https://eu-data-act.drivesomethinggreater.com`. It is the only route into an Audi account
-//! that is open to a third party: both native routes are shut
-//! (`Docs/reference/audi-auth.md` sections 1c and 1d).
+//! that is open to a third party: the myAudi app's code exchange is refused for a public
+//! client, and the hybrid flow is not registered for it. evcc reached the same conclusion and
+//! reads VW Group vehicles through this portal only
+//! (<https://github.com/evcc-io/evcc/tree/master/vehicle/vw/eudataact>).
 //!
 //! The login **is** the form login of [`super::form`]: same identity service, same scraped
 //! e-mail and password forms, same redirect chase. Only three things differ:
@@ -13,7 +15,7 @@
 //!   exchange itself;
 //! - the session is therefore a cookie, not a bearer token.
 //!
-//! What the route costs is recorded in `Docs/reference/audi-auth.md` section 1e: data appears
+//! What the route costs: data appears
 //! roughly every fifteen minutes, there are no commands at all, and a one-time browser setup
 //! (consent, vehicle linked, continuous data request switched on) is the user's job. Without
 //! that setup the portal answers the vehicle list with `403`, and this module says so in those
@@ -43,7 +45,7 @@ const LOG: &str = "vag2mqtt::auth";
 /// The portal's base URL.
 pub const PORTAL_BASE: &str = "https://eu-data-act.drivesomethinggreater.com";
 
-/// The portal's OAuth client id for Audi (`Docs/reference/audi-auth.md` section 1e).
+/// The portal's OAuth client id for Audi, as evcc uses it (`types.go` in <https://github.com/evcc-io/evcc/tree/master/vehicle/vw/eudataact>).
 pub const AUDI_PORTAL_CLIENT_ID: &str = "cc29b87a-5e9a-4362-aecf-5adea6b01bbb@apps_vw-dilab_com";
 
 /// The scope the portal asks for.
@@ -202,7 +204,7 @@ impl AudiAuthStrategy for EuDataActStrategy {
     ) -> Result<(), ConnectorError> {
         // The portal issues no refresh token and states no expiry, so the only way to renew is
         // to find out whether the cookie still works. A rejection becomes `SessionExpired`, and
-        // the supervisor answers that with a fresh login (WP-05).
+        // the supervisor answers that with a fresh login.
         let stored = PortalSession::from_session(session)?;
         let (_, cookies) = self.request_vehicles(&stored, trace).await?;
         trace.finish();
@@ -213,7 +215,7 @@ impl AudiAuthStrategy for EuDataActStrategy {
     /// Reads the packages the portal produced since the last fetch and returns what all
     /// packages so far say.
     ///
-    /// While the portal delivers only empty packages (B-01), every mapped value is
+    /// While the portal delivers only empty packages, every mapped value is
     /// `unavailable`: known to exist, not delivered. That is the honest state, not an error.
     async fn fetch_state(
         &self,

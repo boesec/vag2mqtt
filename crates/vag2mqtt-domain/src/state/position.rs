@@ -9,7 +9,7 @@ use crate::units::{HasUnit, Unit};
 
 /// A geographic position. One value, because latitude and longitude are meaningless apart.
 ///
-/// `Debug` is redacted: coordinates are never logged (NFR-007). `Display` is not implemented at
+/// `Debug` is redacted: coordinates are never logged. `Display` is not implemented at
 /// all, so the only way to get the numbers out is through the accessors.
 #[derive(Clone, Copy, PartialEq, Serialize, Deserialize)]
 #[serde(try_from = "RawGeoPosition")]

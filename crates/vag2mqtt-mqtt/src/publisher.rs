@@ -34,7 +34,7 @@ const LOG_TARGET: &str = "vag2mqtt::mqtt";
 /// A message that arrived on one of the subscribed `set` topics.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Incoming {
-    /// `<prefix>/set/<VIN>/<command>`; acted on from WP-20.
+    /// `<prefix>/set/<VIN>/<command>`; received and ignored until commands exist.
     SetCommand {
         /// The VIN segment as received (not validated).
         vin: String,
@@ -43,7 +43,7 @@ pub enum Incoming {
         /// The raw payload.
         payload: Vec<u8>,
     },
-    /// `<prefix>/maintenance/set/loglevel`; acted on in WP-10.
+    /// `<prefix>/maintenance/set/loglevel`; not acted on yet.
     LogLevel(String),
     /// Anything else under the subscriptions.
     Other {
@@ -59,7 +59,7 @@ pub enum Incoming {
 pub struct PublishReport {
     /// Number of scalar topics published (without `full`).
     pub published: usize,
-    /// The `lc` per path under `status/<VIN>/`, for persistence (WP-02).
+    /// The `lc` per path under `status/<VIN>/`, for persistence.
     pub last_changes: BTreeMap<String, i64>,
 }
 
@@ -139,7 +139,7 @@ impl MqttPublisher {
         if config.protocol == MqttProtocol::V5 {
             tracing::warn!(
                 target: LOG_TARGET,
-                "MQTT 5 is not implemented yet (see WP-24); connecting with MQTT 3.1.1"
+                "MQTT 5 is not implemented yet; connecting with MQTT 3.1.1"
             );
         }
 
@@ -284,7 +284,7 @@ impl MqttHandle {
             .publish_json(topic, true, &StatePayload { val, ts, lc })
     }
 
-    /// Publishes an arbitrary JSON value, for `maintenance/stats` (WP-10). The topic comes from
+    /// Publishes an arbitrary JSON value, for `maintenance/stats`. The topic comes from
     /// [`topics`](Self::topics).
     pub fn publish_json(&self, topic: &str, value: &Value, retain: bool) -> Result<(), MqttError> {
         self.inner.publish_json(topic, retain, value)
@@ -301,7 +301,7 @@ impl MqttHandle {
         Ok(())
     }
 
-    /// Seeds `lc` for a vehicle from the persisted map (WP-02), before the first publish.
+    /// Seeds `lc` for a vehicle from the persisted map, before the first publish.
     pub fn seed_last_changes(&self, vin: &Vin, last_changes: &BTreeMap<String, i64>) {
         let prefix = self.inner.topics.vehicle_status_prefix(vin);
         let mut tracker = self.inner.tracker();

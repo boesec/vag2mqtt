@@ -1,6 +1,6 @@
 //! The `debug-login` subcommand: one login attempt, then exit.
 //!
-//! The WP-06 login spike. It answers one question, on real hardware: does a login against this
+//! A login spike. It answers one question, on real hardware: does a login against this
 //! account work today, and if not, at which step and with which answer does it break.
 //!
 //! It touches neither the database nor MQTT nor the supervisor, and it makes exactly one attempt

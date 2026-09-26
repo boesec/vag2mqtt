@@ -1,7 +1,9 @@
 //! Reading one EU Data Act package, and remembering what several packages said.
 //!
 //! A package is a ZIP holding one JSON document, a flat list of data points
-//! (`Docs/reference/audi-eu-data-act-export.md` section 1). The one-time export arrives as the
+//! `{vin, Data: [{key, dataFieldName, value, timestampUtc}]}`, where `value` is always a
+//! string. `fixtures/audi/eudataact/one_time_export.json` is a real, anonymised example. The
+//! one-time export arrives as the
 //! bare JSON document, so both are accepted.
 
 use std::collections::BTreeMap;

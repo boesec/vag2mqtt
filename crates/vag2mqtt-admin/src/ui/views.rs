@@ -353,7 +353,7 @@ impl BrandOption {
     }
 }
 
-/// The last error, shown with everything FR-021 asks for.
+/// The last error, shown with its category, message and time.
 pub(crate) struct ErrorDetail {
     /// When it happened.
     pub(crate) at: String,
@@ -437,7 +437,7 @@ fn render_value<T: Serialize>(value: &T) -> String {
 
 /// Position gets its own row: the state and the source time are what a first live test needs,
 /// and the coordinates themselves are the one thing the project never puts on a screen or in a
-/// log (NFR-007).
+/// log.
 fn position_row(state: &VehicleState) -> DiagnosticRow {
     let (label, value, source_time) = match &state.position {
         Reading::Unsupported => ("unsupported", "—".to_string(), "—".to_string()),

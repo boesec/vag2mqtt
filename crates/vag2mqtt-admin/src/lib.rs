@@ -4,11 +4,11 @@
 //! call, HTTP out. Every rule lives in the runtime, where it is already tested. Reads come from
 //! the runtime's status snapshot, so they never touch the database.
 //!
-//! The surface is described by `Docs/openapi.yaml`, served at `/api/openapi.yaml`. A test keeps
+//! The surface is described by `openapi.yaml` in this crate, served at `/api/openapi.yaml`. A test keeps
 //! the document and the router honest by comparing both against [`api::ROUTES`], the single list
 //! the router is built from.
 //!
-//! Implemented by WP-08. The htmx interface on top of it is WP-09.
+//! The htmx interface in the `ui` module sits on top of the same runtime handle.
 
 pub mod api;
 pub mod dto;
@@ -28,7 +28,7 @@ use tokio::net::TcpListener;
 /// Binds and serves the API until `shutdown` resolves.
 ///
 /// Logs one warning when bound to anything other than a loopback address, because the API has no
-/// authentication yet (WP-23) and a wide bind should be visible rather than silent.
+/// authentication yet and a wide bind should be visible rather than silent.
 pub async fn serve(
     listen: SocketAddr,
     state: AppState,

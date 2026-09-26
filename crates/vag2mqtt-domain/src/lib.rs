@@ -18,7 +18,6 @@
 //! - Secrets travel as [`Secret`], which never prints its content. Coordinates
 //!   ([`state::GeoPosition`]) and VINs ([`Vin`]) redact themselves in `Debug`.
 //!
-//! Implemented by WP-01.
 
 pub mod account;
 pub mod config;
