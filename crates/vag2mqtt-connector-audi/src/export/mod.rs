@@ -6,6 +6,7 @@
 //! values and a quiet stretch does not turn them into gaps. On the first fetch, the latest
 //! [`MAX_BACKFILL`] packages are read, as evcc does (`vehicle/vw/eudataact/store.go`).
 
+pub(crate) mod continuous;
 pub(crate) mod document;
 pub(crate) mod normalise;
 
@@ -28,9 +29,19 @@ pub(crate) const MAX_BACKFILL: usize = 8;
 /// The suffix the portal gives a package that carries nothing.
 const NO_CONTENT_SUFFIX: &str = "_no_content_found.zip";
 
+/// The version of the field mapping. Raised whenever the normaliser learns to read fields it
+/// ignored before, so that packages already read are read again.
+///
+/// 1: the one-time export's catalogue. 2: the continuous packages' catalogue as well.
+pub(crate) const CATALOGUE_VERSION: u32 = 2;
+
 /// What the connector remembers per vehicle between fetches.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub(crate) struct ExportState {
+    /// The [`CATALOGUE_VERSION`] the stored points were read with; `0` in states stored before
+    /// the version existed.
+    #[serde(default)]
+    pub(crate) catalogue: u32,
     /// The data request identifier, looked up once.
     pub(crate) identifier: Option<String>,
     /// The creation time of the newest package already read.
@@ -112,6 +123,14 @@ pub(crate) async fn update(
     state: &mut ExportState,
     trace: &mut Trace,
 ) -> Result<FetchReport, ConnectorError> {
+    if state.catalogue != CATALOGUE_VERSION {
+        // Only fields the old mapping knew were kept, so the packages already read have to be
+        // read again with the new one: forget the mark and the points, keep the identifier.
+        tracing::info!(target: LOG, vin = %endpoints.vin.short(), from = state.catalogue, to = CATALOGUE_VERSION, "field mapping changed, reading the latest packages again");
+        state.after = None;
+        state.points = Points::default();
+        state.catalogue = CATALOGUE_VERSION;
+    }
     let identifier = match &state.identifier {
         Some(identifier) => identifier.clone(),
         None => {
@@ -342,6 +361,24 @@ mod tests {
         assert_eq!(first[0].name, "p4.zip");
         let later = pending(content, Some(at(10)));
         assert_eq!(later, vec![dataset("p11.zip", 11)]);
+    }
+
+    #[test]
+    fn a_state_from_an_older_mapping_is_read_again() {
+        // A state stored before the continuous catalogue existed has no version: it must not
+        // keep its high-water mark, or the packages it read would never be read again.
+        let stored: ExportState = serde_json::from_value(serde_json::json!({
+            "identifier": "REQ-1",
+            "after": "2026-10-10T10:18:47Z",
+            "points": {"by_name": {}}
+        }))
+        .unwrap();
+        assert_eq!(stored.catalogue, 0);
+        assert!(stored.after.is_some());
+        let content: Vec<Dataset> = (0..3).map(|i| dataset(&format!("p{i}.zip"), i)).collect();
+        // With the old mark nothing would be pending; after the reset the backfill reads them.
+        assert!(pending(content.clone(), stored.after).is_empty());
+        assert_eq!(pending(content, None).len(), 3);
     }
 
     #[test]

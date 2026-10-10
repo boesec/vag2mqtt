@@ -1,10 +1,12 @@
 //! From export points to the brand-independent [`VehicleState`].
 //!
-//! Every mapping is a field name constant below, checked against the fixture. The rule for
-//! the three states:
+//! The portal speaks two field catalogues. The constants below are the one-time export's
+//! (`fixtures/audi/eudataact/one_time_export.json`); the continuous packages' catalogue is in
+//! [`super::continuous`] (`continuous_package.json`). The rule for the three states:
 //!
-//! - a category the export never carries (doors, windows, position, service, vehicle status,
-//!   remaining times, fuel on an electric car) stays **unsupported**;
+//! - a category no package carries (position, remaining times, fuel on an electric car, and
+//!   doors, windows, outside temperature and service until a continuous package arrives) stays
+//!   **unsupported**;
 //! - a mapped field that is missing or unreadable in what has arrived so far is **unavailable**;
 //! - everything else is **present**, with the manufacturer's time where the package has one.
 
@@ -53,9 +55,9 @@ pub(crate) const FIELDS: &[&str] = &[
     CLIMA_TARGET_UNIT,
 ];
 
-/// `true` for a field the normaliser reads.
+/// `true` for a field the normaliser reads, in either catalogue.
 pub(crate) fn is_relevant(name: &str) -> bool {
-    FIELDS.contains(&name)
+    FIELDS.contains(&name) || super::continuous::fields().any(|field| field == name)
 }
 
 /// Builds the state from what the packages have delivered so far.
@@ -134,6 +136,7 @@ pub(crate) fn normalise(points: &Points, fetched_at: DateTime<Utc>) -> VehicleSt
             .then(|| Celsius::new(celsius))
     });
 
+    super::continuous::apply(points, &mut state);
     state
 }
 

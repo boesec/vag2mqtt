@@ -403,10 +403,16 @@ async fn a_login_that_ends_on_a_portal_error_page_is_not_a_session() {
 
 /// The fixture, zipped the way the portal delivers a package.
 fn package() -> Vec<u8> {
+    package_from("one_time_export.json")
+}
+
+/// A fixture, zipped the way the portal delivers a package.
+fn package_from(fixture: &str) -> Vec<u8> {
     use std::io::Write;
     let json = std::fs::read(
         std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/audi/eudataact/one_time_export.json"),
+            .join("../../fixtures/audi/eudataact")
+            .join(fixture),
     )
     .unwrap();
     let mut buffer = std::io::Cursor::new(Vec::new());
@@ -528,4 +534,46 @@ async fn a_vehicle_without_a_data_request_says_so() {
         panic!("expected a manufacturer error, got {error:?}");
     };
     assert!(code.as_deref().unwrap_or_default().contains("data request"));
+}
+
+#[tokio::test]
+async fn packages_read_under_an_older_mapping_are_read_again() {
+    let servers = Servers::start().await;
+    servers.mount_vehicles(vehicle_list()).await;
+    mount_data_request(
+        &servers,
+        r#"[{"name":"p1.zip","createdOn":"2026-10-10T10:00:00Z"}]"#,
+    )
+    .await;
+    Mock::given(method("GET"))
+        .and(path(format!(
+            "{DATA_PREFIX}/datadelivery/vehicles/{VIN}/REQ-1/download"
+        )))
+        .and(wiremock::matchers::header("filename", "p1.zip"))
+        .respond_with(
+            ResponseTemplate::new(200).set_body_bytes(package_from("continuous_package.json")),
+        )
+        .expect(1)
+        .mount(&servers.portal)
+        .await;
+    let connector = servers.connector(TraceConfig::disabled());
+    let mut session = connector.login(&credentials()).await.unwrap();
+
+    // What a session stored by the previous build looks like: the package was read already, its
+    // fields were not recognised, and the mark sits on it. No catalogue version.
+    session.payload["vehicles"] = serde_json::json!({
+        VIN: {
+            "identifier": "REQ-1",
+            "after": "2026-10-10T10:00:00Z",
+            "points": {"by_name": {}}
+        }
+    });
+
+    let state = connector
+        .fetch_state(&mut session, &Vin::new(VIN).unwrap())
+        .await
+        .unwrap();
+    assert_eq!(state.battery.soc.value().map(|p| p.value()), Some(35));
+    assert_eq!(state.odometer.value().map(|k| k.value()), Some(1217));
+    assert!(state.doors.lock.is_present());
 }

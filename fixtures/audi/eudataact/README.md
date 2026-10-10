@@ -18,3 +18,14 @@ Changed from the original:
 
 The export contains no position data. The raw original never enters the repository; `/*.json` in
 the root is ignored for that reason.
+
+## `continuous_package.json`
+
+One continuous package, the kind the portal produces every fifteen minutes, taken on 2026-10-10
+and unzipped. It uses a different field catalogue than the one-time export: flat snake case names
+(`state_of_charge`, `mileage`, `locked_state_front_left_door`) with integer codes, documented in
+the portal's data dictionary and mapped in
+`crates/vag2mqtt-connector-audi/src/export/continuous.rs`.
+
+Changed from the original: the VIN is `WAUZZZ0000000TEST` and the user id is all zeros. Nothing
+else is changed or trimmed; the package contains no position data and no other identifier.
