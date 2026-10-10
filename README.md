@@ -7,28 +7,26 @@ brand independent vehicle model and publishes it over MQTT following the
 [mqtt-smarthome](https://github.com/mqtt-smarthome/mqtt-smarthome) conventions. Audi is the
 first supported brand; Volkswagen, Škoda, Seat and Cupra are planned.
 
-> **Status: paused (since 2026-09-26).** Development is on hold until the manufacturer
-> fixes its side. See [Why development is paused](#why-development-is-paused).
+> **Status: early development, not released yet.** Development was paused from 2026-09-26
+> to 2026-10-10 while the manufacturer's data packages arrived empty; they now carry data.
 
-## Why development is paused
+## Status
 
 Audi's native app backend is closed to third parties, so VAG2MQTT reads Audi vehicles through
-the official **EU Data Act portal** (`eu-data-act.drivesomethinggreater.com`). The login, the
-session handling, vehicle discovery and the processing of data packages are built and tested.
+the official **EU Data Act portal** (`eu-data-act.drivesomethinggreater.com`). The portal
+produces a data package about every 15 minutes; it is a read-only source, so there are no remote
+commands.
 
-What is missing is data. For the car this is being developed against (an Audi A6 e-tron on the
-PPE platform), the portal delivers the continuous 15 minute data packages **permanently empty**
-(`…_no_content_found.zip`). Only the one-time export, which can take up to 24 hours, carries
-content. Other users report the same for PPE based Audis. Without continuous packages there is
-nothing to publish, so work stays paused until Audi fixes the delivery.
-
-What already works:
+What works today:
 
 - login through the EU Data Act portal, with the session kept encrypted across restarts;
 - discovery of the vehicles linked to the account;
-- download and normalisation of data packages into the vehicle model (state of charge, range,
-  odometer, charging, plug and climatisation);
+- download of the 15 minute packages and normalisation into the vehicle model: state of charge,
+  range, odometer, doors and locks, windows, outside temperature and service intervals;
 - MQTT publishing following mqtt-smarthome, and the embedded admin interface.
+
+In progress: the packages carry more than is published so far (tyre pressures, parking brake,
+12 V battery and more), and a few values are not yet marked correctly as unsupported.
 
 ## Design in one paragraph
 
