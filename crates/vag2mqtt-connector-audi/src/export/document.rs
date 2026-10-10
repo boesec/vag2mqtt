@@ -90,7 +90,9 @@ fn document_from(raw: RawDocument) -> Document {
         .into_iter()
         .filter_map(|row| {
             let name = row.data_field_name?;
-            let value = row.value.filter(|v| !v.is_empty())?;
+            // An empty string is kept: the continuous catalogue uses it for a value the car
+            // does not have, which is not the same as a value that did not arrive.
+            let value = row.value?;
             let source_time = row.timestamp_utc.as_deref().and_then(parse_timestamp);
             Some((name, Point { value, source_time }))
         })

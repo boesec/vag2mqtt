@@ -33,7 +33,8 @@ const NO_CONTENT_SUFFIX: &str = "_no_content_found.zip";
 /// ignored before, so that packages already read are read again.
 ///
 /// 1: the one-time export's catalogue. 2: the continuous packages' catalogue as well.
-pub(crate) const CATALOGUE_VERSION: u32 = 2;
+/// 3: the sunroof, and empty values kept so they can mean unsupported.
+pub(crate) const CATALOGUE_VERSION: u32 = 3;
 
 /// What the connector remembers per vehicle between fetches.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]

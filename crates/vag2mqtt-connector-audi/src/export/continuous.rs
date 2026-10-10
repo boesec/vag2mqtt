@@ -11,6 +11,10 @@
 //! with a documented meaning, for example `2` open and `3` closed. `0` leaves a value unsupported,
 //! `1` makes it unavailable, and anything undocumented is unavailable too: nothing is guessed.
 //! The meaning of `2` and `3` for doors and locks was checked against the real car on 2026-10-10.
+//!
+//! A value the car delivers as an **empty string** is unsupported, not unavailable: an electric
+//! car sends the oil change interval empty in every package, because it has none. A field that is
+//! missing from the package altogether is unavailable.
 
 use std::collections::BTreeMap;
 
@@ -60,8 +64,10 @@ const DOOR_LOCKS: &[&str] = &[
     "locked_state_tailgate",
 ];
 
-/// Window states: `2` open, `3` closed.
+/// Window states: `2` open, `3` closed. The sunroof is reported as "sunroof motor hood 1"; a car
+/// without one sends `0`, which leaves it unsupported.
 const WINDOWS: &[(WindowPosition, &str)] = &[
+    (WindowPosition::SunRoof, "state_sunroof_motor_hood_1"),
     (
         WindowPosition::FrontLeft,
         "state_front_left_door_window_lifter",
@@ -177,8 +183,10 @@ pub(crate) fn apply(points: &Points, state: &mut VehicleState) {
 }
 
 /// A plain value: present when it arrived and parses, unavailable otherwise.
+/// Unsupported when the car sends the field empty.
 fn reading<T>(points: &Points, name: &str, parse: impl FnOnce(&str) -> Option<T>) -> Reading<T> {
     match points.get(name) {
+        Some(point) if point.value.trim().is_empty() => Reading::Unsupported,
         Some(point) => match parse(&point.value) {
             Some(value) => Reading::present(value, point.source_time),
             None => Reading::Unavailable,
@@ -191,6 +199,9 @@ fn reading<T>(points: &Points, name: &str, parse: impl FnOnce(&str) -> Option<T>
 /// unavailable for invalid (`1`) or an undocumented code, present otherwise.
 fn coded<T>(points: &Points, name: &str, decode: fn(i64) -> Option<T>) -> Option<Reading<T>> {
     let point: &Point = points.get(name)?;
+    if point.value.trim().is_empty() {
+        return None;
+    }
     match int(&point.value) {
         Some(0) => None,
         Some(code) => Some(match decode(code) {
@@ -316,13 +327,56 @@ mod tests {
         let outside = value(&state.status.outside_temperature).value();
         assert!((outside - 11.45).abs() < 1e-9, "{outside}");
         assert_eq!(value(&state.service.inspection_due_in), Days::new(-699));
-        // Delivered empty: known to exist, not delivered.
+        // Sent empty in every package: this electric car has no such interval.
+        assert!(!state.service.inspection_due_after.is_supported());
+        assert!(!state.service.oil_service_due_in.is_supported());
+        assert!(!state.service.oil_service_due_after.is_supported());
+    }
+
+    #[test]
+    fn the_sunroof_is_read_and_left_out_when_the_car_has_none() {
+        // The real car sends `0`: no sunroof.
+        let state = normalise(&fixture("continuous_package.json"), Utc::now());
+        assert!(
+            !state
+                .windows
+                .by_position
+                .contains_key(&WindowPosition::SunRoof)
+        );
+        // A car that has one reports it like any window.
+        let mut points = Points::default();
+        points.merge(
+            read_package(
+                br#"{"Data":[{"dataFieldName":"state_sunroof_motor_hood_1","value":"2"}]}"#,
+            )
+            .unwrap(),
+            is_relevant,
+        );
+        let state = normalise(&points, Utc::now());
+        assert_eq!(
+            value(&state.windows.by_position[&WindowPosition::SunRoof]),
+            OpenState::Open
+        );
+        assert_eq!(value(&state.windows.overall), OpenState::Open);
+    }
+
+    #[test]
+    fn empty_means_unsupported_and_missing_means_unavailable() {
+        let mut points = Points::default();
+        points.merge(
+            read_package(
+                br#"{"Data":[
+                    {"dataFieldName":"maintenance_interval__time_until_oil_change","value":""},
+                    {"dataFieldName":"mileage","value":"1233"}
+                ]}"#,
+            )
+            .unwrap(),
+            is_relevant,
+        );
+        let state = normalise(&points, Utc::now());
+        assert!(!state.service.oil_service_due_in.is_supported());
         assert!(matches!(
-            state.service.inspection_due_after,
-            Reading::Unavailable
-        ));
-        assert!(matches!(
-            state.service.oil_service_due_in,
+            state.service.inspection_due_in,
             Reading::Unavailable
         ));
     }
