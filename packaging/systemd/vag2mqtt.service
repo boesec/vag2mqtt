@@ -1,0 +1,62 @@
+# systemd unit for VAG2MQTT.
+#
+# Install (as root):
+#   useradd --system --home-dir /var/lib/vag2mqtt --shell /usr/sbin/nologin vag2mqtt
+#   install -m 0755 target/release/vag2mqtt /usr/local/bin/vag2mqtt
+#   install -m 0644 packaging/systemd/vag2mqtt.service /etc/systemd/system/vag2mqtt.service
+#   systemctl daemon-reload
+#   systemctl enable --now vag2mqtt
+#
+# Logs:     journalctl -u vag2mqtt -f
+# Settings: put overrides into /etc/vag2mqtt/env (optional), for example
+#   VAG2MQTT_LISTEN=127.0.0.1:8080
+#   VAG2MQTT_LOG=info,vag2mqtt::fetch=debug
+#
+# The admin interface has no authentication yet. The default below listens on every address of
+# the container so the interface is reachable from the LAN; only do that in a trusted network.
+
+[Unit]
+Description=VAG2MQTT - Volkswagen Group vehicles to MQTT
+Documentation=https://github.com/boesec/vag2mqtt
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=vag2mqtt
+Group=vag2mqtt
+
+# Database, master key and runtime state. systemd creates /var/lib/vag2mqtt owned by the
+# service user, readable by nobody else; the master key in it protects the stored credentials,
+# so back the directory up.
+StateDirectory=vag2mqtt
+StateDirectoryMode=0700
+UMask=0077
+
+Environment=VAG2MQTT_DATA_DIR=/var/lib/vag2mqtt
+Environment=VAG2MQTT_LISTEN=0.0.0.0:8080
+Environment=VAG2MQTT_LOG=info
+Environment=VAG2MQTT_LOG_FORMAT=pretty
+EnvironmentFile=-/etc/vag2mqtt/env
+
+ExecStart=/usr/local/bin/vag2mqtt
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=30
+
+# Hardening. These work in a privileged container and in an unprivileged one with "nesting"
+# enabled. If the service fails to start with status 226/NAMESPACE in an unprivileged LXC
+# without nesting, enable nesting for the container or comment this block out.
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ProtectControlGroups=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

@@ -48,6 +48,25 @@ cargo build --workspace
 cargo run -p vag2mqtt -- --help
 ```
 
+## Running as a systemd service
+
+On a Linux host or container (for example a Debian LXC), after `cargo build --release`:
+
+```sh
+useradd --system --home-dir /var/lib/vag2mqtt --shell /usr/sbin/nologin vag2mqtt
+install -m 0755 target/release/vag2mqtt /usr/local/bin/vag2mqtt
+install -m 0644 packaging/systemd/vag2mqtt.service /etc/systemd/system/vag2mqtt.service
+systemctl daemon-reload
+systemctl enable --now vag2mqtt
+journalctl -u vag2mqtt -f
+```
+
+State lives in `/var/lib/vag2mqtt`, including the master key; back it up. The unit listens on
+`0.0.0.0:8080` so the admin interface is reachable from the LAN. It has no authentication yet,
+so use it only in a trusted network, or set `VAG2MQTT_LISTEN=127.0.0.1:8080` in
+`/etc/vag2mqtt/env`. Comments in the unit file explain the remaining settings and what to do if
+the hardening options are refused inside an unprivileged container.
+
 ## Bootstrap settings
 
 Everything else is configured at runtime, not here.
@@ -84,6 +103,7 @@ cargo test --workspace
 | `crates/vag2mqtt-runtime` | Account supervisor and polling scheduler |
 | `crates/vag2mqtt-admin` | Admin API and embedded web UI |
 | `vag2mqtt` | The binary; wiring only |
+| `packaging` | systemd unit |
 | `fixtures` | Anonymised manufacturer responses used by the tests |
 
 ## Relationship to other projects
