@@ -34,3 +34,6 @@
 *.swp
 .DS_Store
 Thumbs.db
+
+# Git worktrees of sub-agents
+/.claude/worktrees/
