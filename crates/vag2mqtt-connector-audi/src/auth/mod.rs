@@ -34,9 +34,13 @@ pub trait AudiAuthStrategy: Send + Sync {
     ///
     /// The route builds its own HTTP client, because a session is a cookie jar on one route and
     /// a token on the other, and a client shared between accounts would mix the two up.
+    ///
+    /// `previous` is the session this login replaces, if any. A route may carry its own state
+    /// over from it, never its credentials; one it cannot read is ignored.
     async fn login(
         &self,
         credentials: &Credentials,
+        previous: Option<&SessionState>,
         trace: &mut Trace,
     ) -> Result<SessionState, ConnectorError>;
 

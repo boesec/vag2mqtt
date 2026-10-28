@@ -16,6 +16,8 @@ use crate::export::ExportState;
 /// The name the portal route stores in its session payload.
 pub(crate) const EU_DATA_ACT_ROUTE: &str = "eu_data_act";
 
+const LOG: &str = "vag2mqtt::auth";
+
 /// Safety margin before the access token's real expiry at which the runtime refreshes.
 pub(crate) const REFRESH_MARGIN_SECS: i64 = 60;
 
@@ -114,7 +116,8 @@ pub(crate) struct PortalSession {
     /// What the export packages said so far, per VIN.
     ///
     /// Kept in the session because the connector is stateless and the runtime persists the
-    /// session after every successful call. A new login starts it afresh, which only costs one
+    /// session after every successful call. A login that replaces an expired session carries it
+    /// over ([`PortalSession::carried_export_state`]), so the portal's hourly expiry costs no
     /// backfill.
     pub(crate) vehicles: BTreeMap<String, ExportState>,
 }
@@ -194,6 +197,48 @@ impl PortalSession {
             established_at,
             vehicles,
         })
+    }
+
+    /// The per-vehicle export state of a session a new login replaces, and nothing else of it:
+    /// its cookies are the reason for the login, and the establishment time belongs to the new
+    /// one.
+    ///
+    /// Read independently of the rest of the payload, because a session the portal expired is
+    /// still a valid record of what was read. A session from another brand or route carries
+    /// nothing, and so does an entry that cannot be read; the others are kept. Neither is an
+    /// error: the cost is one backfill, not the login.
+    pub(crate) fn carried_export_state(previous: &SessionState) -> BTreeMap<String, ExportState> {
+        if previous.brand != Brand::Audi
+            || previous.payload.get("route").and_then(|v| v.as_str()) != Some(EU_DATA_ACT_ROUTE)
+        {
+            tracing::debug!(target: LOG, "the replaced session is not a portal session; nothing carried over");
+            return BTreeMap::new();
+        }
+        let Some(entries) = previous
+            .payload
+            .get("vehicles")
+            .and_then(|value| value.as_object())
+        else {
+            tracing::debug!(target: LOG, "the replaced session holds no readable export state");
+            return BTreeMap::new();
+        };
+        let mut carried = BTreeMap::new();
+        let mut dropped = 0_usize;
+        for (vin, value) in entries {
+            match serde_json::from_value::<ExportState>(value.clone()) {
+                Ok(state) => {
+                    carried.insert(vin.clone(), state);
+                }
+                Err(_) => dropped += 1,
+            }
+        }
+        tracing::debug!(
+            target: LOG,
+            carried = carried.len(),
+            dropped,
+            "export state carried over from the replaced session"
+        );
+        carried
     }
 }
 
@@ -280,6 +325,85 @@ mod tests {
         };
         let session = tokens.into_session();
         assert!(PortalSession::from_session(&session).is_err());
+    }
+
+    fn export_entry() -> serde_json::Value {
+        serde_json::json!({
+            "catalogue": crate::export::CATALOGUE_VERSION,
+            "identifier": "REQ-1",
+            "after": "2026-10-24T07:45:00Z",
+            "points": {"by_name": {}}
+        })
+    }
+
+    fn portal_session_with(vehicles: serde_json::Value) -> SessionState {
+        let mut cookies = Cookies::default();
+        cookies.absorb(
+            &url::Url::parse("https://portal.example.test/login").unwrap(),
+            &cookie_header("SESSION=OLD-COOKIE-MARKER; Path=/"),
+        );
+        let mut session = PortalSession::new(cookies).into_session();
+        session.payload["vehicles"] = vehicles;
+        session
+    }
+
+    #[test]
+    fn only_the_export_state_of_a_replaced_portal_session_is_carried() {
+        let previous = portal_session_with(serde_json::json!({
+            "WAUZZZ0000000TEST": export_entry(),
+            "WAUZZZ0000000NEXT": export_entry(),
+        }));
+        let carried = PortalSession::carried_export_state(&previous);
+        assert_eq!(carried.len(), 2);
+        let state = &carried["WAUZZZ0000000TEST"];
+        assert_eq!(state.catalogue, crate::export::CATALOGUE_VERSION);
+        assert_eq!(state.identifier.as_deref(), Some("REQ-1"));
+        assert!(state.after.is_some());
+        // The carried state is a map of export states: there is no place in it for a cookie.
+        assert!(
+            !serde_json::to_string(&carried)
+                .unwrap()
+                .contains("OLD-COOKIE-MARKER")
+        );
+    }
+
+    #[test]
+    fn an_unreadable_entry_is_dropped_and_the_others_are_kept() {
+        let previous = portal_session_with(serde_json::json!({
+            "WAUZZZ0000000TEST": export_entry(),
+            "WAUZZZ0000000NEXT": {"catalogue": "not a number", "points": 7},
+        }));
+        let carried = PortalSession::carried_export_state(&previous);
+        assert_eq!(
+            carried.keys().collect::<Vec<_>>(),
+            vec!["WAUZZZ0000000TEST"]
+        );
+        let garbage = portal_session_with(serde_json::json!("garbage"));
+        assert!(PortalSession::carried_export_state(&garbage).is_empty());
+        let mut absent = portal_session_with(serde_json::json!({}));
+        absent.payload.as_object_mut().unwrap().remove("vehicles");
+        assert!(PortalSession::carried_export_state(&absent).is_empty());
+    }
+
+    #[test]
+    fn a_session_of_another_brand_or_route_carries_nothing() {
+        let mut other_brand = portal_session_with(serde_json::json!({
+            "WAUZZZ0000000TEST": export_entry(),
+        }));
+        other_brand.brand = Brand::Skoda;
+        assert!(PortalSession::carried_export_state(&other_brand).is_empty());
+
+        let tokens = AudiTokens {
+            access: Secret::new("ACCESS-MARKER".into()),
+            refresh: None,
+            id_token: None,
+            expires_at: Utc::now() + chrono::Duration::hours(1),
+            strategy: "form".into(),
+        };
+        let mut token_session = tokens.into_session();
+        token_session.payload["vehicles"] =
+            serde_json::json!({ "WAUZZZ0000000TEST": export_entry() });
+        assert!(PortalSession::carried_export_state(&token_session).is_empty());
     }
 
     fn cookie_header(value: &str) -> reqwest::header::HeaderMap {

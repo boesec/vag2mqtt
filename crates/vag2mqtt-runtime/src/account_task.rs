@@ -95,6 +95,9 @@ struct Task {
     account: Account,
     credentials: Credentials,
     session: Option<SessionState>,
+    /// A session the manufacturer rejected, kept until the next login replaces it so the
+    /// connector can carry its own state over (what it has already read, for example).
+    expired: Option<SessionState>,
     vehicles: Vec<Vehicle>,
     vehicle_failures: HashMap<Vin, u32>,
     auth_failed: bool,
@@ -209,6 +212,7 @@ impl Task {
             account,
             credentials,
             session: None,
+            expired: None,
             vehicles,
             vehicle_failures: HashMap::new(),
             auth_failed: false,
@@ -327,8 +331,11 @@ impl Task {
             Some(self.now() + chrono::Duration::from_std(delay).unwrap_or_default());
     }
 
+    /// Drops the session and everything the connector kept in it, here and in the database. The
+    /// next login starts from nothing.
     async fn forget_session(&mut self) {
         self.session = None;
+        self.expired = None;
         if let Err(error) = self
             .deps
             .db
@@ -337,6 +344,18 @@ impl Task {
             .await
         {
             tracing::warn!(target: LOG_ACCOUNT, account_id = %self.id, %error, "could not delete the stored session");
+        }
+    }
+
+    /// The manufacturer rejected the session: the next call logs in again and hands the rejected
+    /// session to the connector as the one it replaces.
+    ///
+    /// The stored copy stays in the database until the new session overwrites it. Should the
+    /// service stop in between, it starts from the stored copy, is rejected once more, and still
+    /// carries the connector's state over.
+    fn expire_session(&mut self) {
+        if let Some(session) = self.session.take() {
+            self.expired = Some(session);
         }
     }
 
@@ -660,7 +679,9 @@ impl Task {
     /// Makes sure `self.session` is usable: stored session, refresh, or a fresh login.
     async fn ensure_session(&mut self) -> Result<(), Cycle> {
         let now = self.now();
+        // A rejected session is still in the database; loading it would only be rejected again.
         if self.session.is_none()
+            && self.expired.is_none()
             && let Ok(Some(bytes)) = self.deps.db.secrets().account_session(&self.id).await
             && let Ok(stored) = SessionState::from_bytes(bytes.expose_secret())
             && stored.brand == self.account.brand
@@ -672,6 +693,9 @@ impl Task {
         {
             return Ok(());
         }
+        // The session the login replaces, if there is one: rejected earlier, or failing its
+        // refresh just now. `None` only on a first login.
+        let mut previous = self.expired.take();
         if let Some(mut session) = self.session.take() {
             match self.deps.connector.refresh(&mut session).await {
                 Ok(()) => {
@@ -681,21 +705,31 @@ impl Task {
                 }
                 Err(error) => {
                     tracing::info!(target: LOG_ACCOUNT, account_id = %self.id, %error, "session refresh failed, logging in again");
+                    previous = Some(session);
                 }
             }
         }
-        match self.deps.connector.login(&self.credentials).await {
+        match self
+            .deps
+            .connector
+            .login(&self.credentials, previous.as_ref())
+            .await
+        {
             Ok(session) => {
                 tracing::info!(target: LOG_ACCOUNT, account_id = %self.id, "logged in");
                 self.session = Some(session);
                 self.persist_session().await;
                 Ok(())
             }
-            Err(error) => Err(match error.class() {
-                ErrorClass::AuthInvalid => Cycle::AuthError(error),
-                ErrorClass::RateLimited => Cycle::RateLimited(retry_after(&error)),
-                _ => Cycle::Transient(error),
-            }),
+            Err(error) => {
+                // Kept for the next attempt; an authentication error forgets it in `apply`.
+                self.expired = previous;
+                Err(match error.class() {
+                    ErrorClass::AuthInvalid => Cycle::AuthError(error),
+                    ErrorClass::RateLimited => Cycle::RateLimited(retry_after(&error)),
+                    _ => Cycle::Transient(error),
+                })
+            }
         }
     }
 
@@ -710,7 +744,7 @@ impl Task {
                     ErrorClass::AuthInvalid => Cycle::AuthError(error),
                     ErrorClass::RateLimited => Cycle::RateLimited(retry_after(&error)),
                     ErrorClass::SessionExpired => {
-                        self.forget_session().await;
+                        self.expire_session();
                         Cycle::Transient(error)
                     }
                     _ => Cycle::Transient(error),
@@ -810,7 +844,7 @@ impl Task {
                 Err(error) => match error.class() {
                     ErrorClass::SessionExpired if attempt == 0 => {
                         tracing::info!(target: LOG_ACCOUNT, account_id = %self.id, "session expired, logging in again");
-                        self.forget_session().await;
+                        self.expire_session();
                     }
                     ErrorClass::SessionExpired => {
                         return Err(VehicleFailure::Transient(error));

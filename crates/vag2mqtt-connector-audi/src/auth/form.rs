@@ -477,9 +477,12 @@ impl AudiAuthStrategy for FormLoginStrategy {
         }
     }
 
+    /// The live route keeps nothing but tokens, so there is nothing to carry over from
+    /// `previous`.
     async fn login(
         &self,
         credentials: &Credentials,
+        _previous: Option<&SessionState>,
         trace: &mut Trace,
     ) -> Result<SessionState, ConnectorError> {
         let http = HttpClient::new()?;

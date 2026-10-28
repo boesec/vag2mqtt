@@ -205,7 +205,7 @@ async fn a_portal_login_yields_a_cookie_session_and_no_token() {
     servers.mount_vehicles(vehicle_list()).await;
     let connector = servers.connector(TraceConfig::disabled());
 
-    let session = connector.login(&credentials()).await.unwrap();
+    let session = connector.login(&credentials(), None).await.unwrap();
 
     assert_eq!(session.payload["route"], "eu_data_act");
     assert!(session.payload.get("access_token").is_none());
@@ -226,7 +226,7 @@ async fn the_session_survives_persistence_and_lists_the_vehicles() {
     let servers = Servers::start().await;
     servers.mount_vehicles(vehicle_list()).await;
     let connector = servers.connector(TraceConfig::disabled());
-    let session = connector.login(&credentials()).await.unwrap();
+    let session = connector.login(&credentials(), None).await.unwrap();
 
     // What persistence stores and loads back: the bytes, not the object.
     let bytes = session.to_bytes().unwrap();
@@ -247,7 +247,7 @@ async fn a_rejected_cookie_is_an_expired_session() {
     let servers = Servers::start().await;
     servers.mount_vehicles(vehicle_list()).await;
     let connector = servers.connector(TraceConfig::disabled());
-    let mut session = connector.login(&credentials()).await.unwrap();
+    let mut session = connector.login(&credentials(), None).await.unwrap();
 
     // The portal forgets the session: every further request is answered 401.
     servers.portal.reset().await;
@@ -270,7 +270,7 @@ async fn a_portal_without_the_browser_setup_names_the_setup_not_the_password() {
     servers.mount_vehicles(ResponseTemplate::new(403)).await;
     let connector = servers.connector(TraceConfig::disabled());
 
-    let error = connector.login(&credentials()).await.unwrap_err();
+    let error = connector.login(&credentials(), None).await.unwrap_err();
     let ConnectorError::Manufacturer { status, code } = &error else {
         panic!("expected a manufacturer error, got {error:?}");
     };
@@ -313,7 +313,7 @@ async fn wrong_credentials_are_still_recognised_on_the_portal_route() {
         .await;
     let connector = servers.connector(TraceConfig::disabled());
 
-    let error = connector.login(&credentials()).await.unwrap_err();
+    let error = connector.login(&credentials(), None).await.unwrap_err();
     assert!(
         matches!(error, ConnectorError::InvalidCredentials),
         "{error:?}"
@@ -327,7 +327,7 @@ async fn trace_files_of_a_portal_login_leak_nothing() {
     let directory = tempfile::tempdir().unwrap();
     let connector = servers.connector(TraceConfig::into_directory(directory.path()));
 
-    connector.login(&credentials()).await.unwrap();
+    connector.login(&credentials(), None).await.unwrap();
 
     let mut files = Vec::new();
     let mut pending = vec![directory.path().to_path_buf()];
@@ -391,7 +391,7 @@ async fn a_login_that_ends_on_a_portal_error_page_is_not_a_session() {
         .await;
     let connector = servers.connector(TraceConfig::disabled());
 
-    let error = connector.login(&credentials()).await.unwrap_err();
+    let error = connector.login(&credentials(), None).await.unwrap_err();
     let ConnectorError::Manufacturer { code, .. } = &error else {
         panic!("expected a manufacturer error, got {error:?}");
     };
@@ -470,7 +470,7 @@ async fn fetch_reads_each_package_once_and_skips_the_empty_ones() {
         .await;
     let connector = servers.connector(TraceConfig::disabled());
     let vin = Vin::new(VIN).unwrap();
-    let mut session = connector.login(&credentials()).await.unwrap();
+    let mut session = connector.login(&credentials(), None).await.unwrap();
 
     let state = connector.fetch_state(&mut session, &vin).await.unwrap();
     assert_eq!(state.battery.soc.value().map(|p| p.value()), Some(51));
@@ -495,7 +495,7 @@ async fn only_empty_packages_mean_unavailable_values_not_an_error() {
     )
     .await;
     let connector = servers.connector(TraceConfig::disabled());
-    let mut session = connector.login(&credentials()).await.unwrap();
+    let mut session = connector.login(&credentials(), None).await.unwrap();
 
     let state = connector
         .fetch_state(&mut session, &Vin::new(VIN).unwrap())
@@ -524,7 +524,7 @@ async fn a_vehicle_without_a_data_request_says_so() {
         .mount(&servers.portal)
         .await;
     let connector = servers.connector(TraceConfig::disabled());
-    let mut session = connector.login(&credentials()).await.unwrap();
+    let mut session = connector.login(&credentials(), None).await.unwrap();
 
     let error = connector
         .fetch_state(&mut session, &Vin::new(VIN).unwrap())
@@ -557,7 +557,7 @@ async fn packages_read_under_an_older_mapping_are_read_again() {
         .mount(&servers.portal)
         .await;
     let connector = servers.connector(TraceConfig::disabled());
-    let mut session = connector.login(&credentials()).await.unwrap();
+    let mut session = connector.login(&credentials(), None).await.unwrap();
 
     // What a session stored by the previous build looks like: the package was read already, its
     // fields were not recognised, and the mark sits on it. No catalogue version.
@@ -576,4 +576,175 @@ async fn packages_read_under_an_older_mapping_are_read_again() {
     assert_eq!(state.battery.soc.value().map(|p| p.value()), Some(35));
     assert_eq!(state.odometer.value().map(|k| k.value()), Some(1217));
     assert!(state.doors.lock.is_present());
+}
+
+/// Collects what `tracing` writes, for tests that assert on the log.
+#[derive(Clone, Default)]
+struct LogBuffer(Arc<std::sync::Mutex<Vec<u8>>>);
+
+impl LogBuffer {
+    fn text(&self) -> String {
+        String::from_utf8_lossy(&self.0.lock().unwrap()).into_owned()
+    }
+}
+
+impl std::io::Write for LogBuffer {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        self.0.lock().unwrap().extend_from_slice(buf);
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
+impl<'a> tracing_subscriber::fmt::MakeWriter<'a> for LogBuffer {
+    type Writer = LogBuffer;
+
+    fn make_writer(&'a self) -> Self::Writer {
+        self.clone()
+    }
+}
+
+// A current-thread runtime (the default of `tokio::test`), so the thread-local subscriber sees
+// every event the connector logs.
+#[tokio::test]
+async fn a_relogin_keeps_the_export_state_of_the_expired_session() {
+    let log = LogBuffer::default();
+    let subscriber = tracing_subscriber::fmt()
+        .with_writer(log.clone())
+        .with_max_level(tracing::Level::DEBUG)
+        .with_ansi(false)
+        .finish();
+    let _guard = tracing::subscriber::set_default(subscriber);
+
+    let servers = Servers::start().await;
+    servers.mount_vehicles(vehicle_list()).await;
+    // Both looked up exactly once: the identifier and the package survive the re-login.
+    Mock::given(method("GET"))
+        .and(path(format!(
+            "{DATA_PREFIX}/datarequest/vehicles/{VIN}/metadata/partial"
+        )))
+        .respond_with(ResponseTemplate::new(200).set_body_string(r#"{"Identifier":"REQ-1"}"#))
+        .expect(1)
+        .mount(&servers.portal)
+        .await;
+    Mock::given(method("GET"))
+        .and(path(format!(
+            "{DATA_PREFIX}/datadelivery/vehicles/{VIN}/REQ-1/download"
+        )))
+        .and(wiremock::matchers::header("filename", "p1.zip"))
+        .respond_with(ResponseTemplate::new(200).set_body_bytes(package()))
+        .expect(1)
+        .mount(&servers.portal)
+        .await;
+    Mock::given(method("GET"))
+        .and(path(format!(
+            "{DATA_PREFIX}/datadelivery/vehicles/{VIN}/REQ-1/list"
+        )))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_string(r#"[{"name":"p1.zip","createdOn":"2026-10-24T07:45:00Z"}]"#),
+        )
+        .mount(&servers.portal)
+        .await;
+    let connector = servers.connector(TraceConfig::disabled());
+    let vin = Vin::new(VIN).unwrap();
+
+    let mut session = connector.login(&credentials(), None).await.unwrap();
+    let state = connector.fetch_state(&mut session, &vin).await.unwrap();
+    assert_eq!(state.battery.soc.value().map(|p| p.value()), Some(51));
+
+    // The portal expires the session: the next package list is refused once.
+    Mock::given(method("GET"))
+        .and(path(format!(
+            "{DATA_PREFIX}/datadelivery/vehicles/{VIN}/REQ-1/list"
+        )))
+        .respond_with(ResponseTemplate::new(401))
+        .with_priority(1)
+        .up_to_n_times(1)
+        .expect(1)
+        .mount(&servers.portal)
+        .await;
+    let error = connector.fetch_state(&mut session, &vin).await.unwrap_err();
+    assert!(matches!(error, ConnectorError::SessionExpired), "{error:?}");
+
+    // What the runtime hands over is the stored session; its cookies are marked so that a
+    // carried-over cookie would show.
+    let mut previous =
+        vag2mqtt_connector_api::SessionState::from_bytes(&session.to_bytes().unwrap()).unwrap();
+    previous.payload["cookies"] = serde_json::json!("OLD-COOKIE-MARKER");
+    let mut relogged = connector
+        .login(&credentials(), Some(&previous))
+        .await
+        .unwrap();
+    let stored = relogged.payload.to_string();
+    assert!(
+        !stored.contains("OLD-COOKIE-MARKER"),
+        "cookies are never carried"
+    );
+    assert!(stored.contains(SESSION_COOKIE), "the new login's cookie");
+    assert_eq!(relogged.payload["vehicles"], session.payload["vehicles"]);
+
+    let again = connector.fetch_state(&mut relogged, &vin).await.unwrap();
+    assert_eq!(again.battery.soc.value().map(|p| p.value()), Some(51));
+    assert_eq!(again.odometer.value().map(|k| k.value()), Some(568));
+
+    let text = log.text();
+    assert!(
+        !text.contains("field mapping changed"),
+        "a re-login is not a mapping change:\n{text}"
+    );
+    assert!(text.contains("export state carried over"), "{text}");
+    for secret in [SESSION_COOKIE, "OLD-COOKIE-MARKER", "hunter2", VIN] {
+        assert!(!text.contains(secret), "{secret} leaked into the log");
+    }
+    // Leaving the test verifies the `expect` counts: one data request lookup, one download.
+}
+
+#[tokio::test]
+async fn a_foreign_or_unreadable_previous_session_is_ignored() {
+    let servers = Servers::start().await;
+    servers.mount_vehicles(vehicle_list()).await;
+    let connector = servers.connector(TraceConfig::disabled());
+    let export = serde_json::json!({
+        VIN: {"catalogue": 3, "identifier": "REQ-1", "after": "2026-10-24T07:45:00Z",
+              "points": {"by_name": {}}}
+    });
+
+    let other_brand = vag2mqtt_connector_api::SessionState::new(
+        vag2mqtt_domain::Brand::Skoda,
+        serde_json::json!({"route": "eu_data_act", "vehicles": export.clone()}),
+    );
+    let native_route = AudiTokens {
+        access: Secret::new("ACCESS-MARKER".into()),
+        refresh: None,
+        id_token: None,
+        expires_at: chrono::Utc::now(),
+        strategy: "form".into(),
+    }
+    .into_session();
+    let unreadable = vag2mqtt_connector_api::SessionState::new(
+        vag2mqtt_domain::Brand::Audi,
+        serde_json::json!({"route": "eu_data_act", "vehicles": "garbage", "cookies": 7}),
+    );
+    let not_an_object = vag2mqtt_connector_api::SessionState::new(
+        vag2mqtt_domain::Brand::Audi,
+        serde_json::json!(["not", "a", "session"]),
+    );
+
+    for previous in [other_brand, native_route, unreadable, not_an_object] {
+        let session = connector
+            .login(&credentials(), Some(&previous))
+            .await
+            .unwrap();
+        assert_eq!(session.payload["route"], "eu_data_act");
+        assert_eq!(
+            session.payload["vehicles"],
+            serde_json::json!({}),
+            "nothing carried from {previous:?}"
+        );
+        assert!(!session.payload.to_string().contains("ACCESS-MARKER"));
+    }
 }

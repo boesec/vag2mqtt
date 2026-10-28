@@ -180,12 +180,21 @@ impl AudiAuthStrategy for EuDataActStrategy {
         }
     }
 
+    /// Logs in afresh and carries the export state of `previous` over, so that a session the
+    /// portal expired costs neither a second download of the packages already read nor the
+    /// points they delivered. The cookies always come from the new login.
     async fn login(
         &self,
         credentials: &Credentials,
+        previous: Option<&SessionState>,
         trace: &mut Trace,
     ) -> Result<SessionState, ConnectorError> {
-        let result = self.run_login(credentials, trace).await;
+        let result = self.run_login(credentials, trace).await.map(|mut session| {
+            if let Some(previous) = previous {
+                session.vehicles = PortalSession::carried_export_state(previous);
+            }
+            session
+        });
         match &result {
             Ok(session) => trace.outcome(
                 Step::PortalLanding,

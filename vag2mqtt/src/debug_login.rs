@@ -52,7 +52,7 @@ pub(crate) async fn run(args: DebugLogin) -> Result<()> {
     println!("  attempts   exactly one");
     println!();
 
-    let outcome = connector.login(&credentials).await;
+    let outcome = connector.login(&credentials, None).await;
     report(&outcome);
     match outcome {
         Ok(_) => Ok(()),

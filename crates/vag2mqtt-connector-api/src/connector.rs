@@ -62,7 +62,17 @@ pub trait Connector: Send + Sync {
     fn info(&self) -> &ConnectorInfo;
 
     /// Authenticates with the manufacturer and returns a fresh session.
-    async fn login(&self, credentials: &Credentials) -> Result<SessionState, ConnectorError>;
+    ///
+    /// `previous` is the session this login replaces, typically one the manufacturer has just
+    /// rejected, or `None` on a first login. A connector may carry its own state over from it
+    /// (what it has already read, for example), but never its credentials: those are the reason
+    /// for the login. A `previous` the connector cannot read, or one from another connector, is
+    /// ignored and the login proceeds as a first one.
+    async fn login(
+        &self,
+        credentials: &Credentials,
+        previous: Option<&SessionState>,
+    ) -> Result<SessionState, ConnectorError>;
 
     /// Renews the session's tokens in place.
     async fn refresh(&self, session: &mut SessionState) -> Result<(), ConnectorError>;

@@ -120,7 +120,7 @@ async fn trace_level_logging_leaks_nothing() {
         username: "driver@example.test".into(),
         password: Secret::new("hunter2-MARKER".into()),
     };
-    connector.login(&credentials).await.unwrap();
+    connector.login(&credentials, None).await.unwrap();
 
     let log = String::from_utf8_lossy(&buffer.0.lock().unwrap()).into_owned();
     assert!(log.contains("login succeeded"), "{log}");

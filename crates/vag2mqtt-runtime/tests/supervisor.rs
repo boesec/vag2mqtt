@@ -565,6 +565,68 @@ async fn session_expiry_triggers_one_relogin() {
     h.handle.shutdown().await.unwrap();
 }
 
+/// The payload the fake connector gives the session of its `n`-th successful login.
+fn fake_session(n: u32) -> Option<serde_json::Value> {
+    Some(serde_json::json!({ "fake_token": format!("token-{n}") }))
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_relogin_after_an_expired_fetch_hands_over_the_rejected_session() {
+    let h = start(|b| b, vec![], true).await;
+    let _id = create(&h.handle, Brand::Audi, Duration::from_millis(100)).await;
+    wait_for(T, || h.audi.counters().fetches_of(&vin("0TEST")) >= 1).await;
+    assert_eq!(
+        h.audi.login_previous(),
+        vec![None],
+        "a first login has none"
+    );
+
+    h.audi
+        .fail_fetch_once(vin("0TEST"), ConnectorError::SessionExpired);
+    wait_for(T, || h.audi.login_previous().len() >= 2).await;
+    assert_eq!(h.audi.login_previous(), vec![None, fake_session(1)]);
+    h.handle.shutdown().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_relogin_after_an_expired_discovery_hands_over_the_rejected_session() {
+    let h = start(|b| b, vec![], true).await;
+    h.audi.fail_list_once(ConnectorError::SessionExpired);
+    let _id = create(&h.handle, Brand::Audi, Duration::from_millis(100)).await;
+    wait_for(T, || h.audi.login_previous().len() >= 2).await;
+    assert_eq!(h.audi.login_previous(), vec![None, fake_session(1)]);
+    h.handle.shutdown().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_failed_relogin_hands_over_the_rejected_session_again() {
+    let h = start(|b| b, vec![], true).await;
+    let _id = create(&h.handle, Brand::Audi, Duration::from_millis(100)).await;
+    wait_for(T, || h.audi.counters().fetches_of(&vin("0TEST")) >= 1).await;
+
+    h.audi.fail_login_once(ConnectorError::network("down"));
+    h.audi
+        .fail_fetch_once(vin("0TEST"), ConnectorError::SessionExpired);
+    wait_for(T, || h.audi.login_previous().len() >= 3).await;
+    assert_eq!(
+        h.audi.login_previous(),
+        vec![None, fake_session(1), fake_session(1)],
+        "the rejected session is kept until a login replaces it"
+    );
+    h.handle.shutdown().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn reauthenticating_starts_from_nothing() {
+    let h = start(|b| b, vec![], true).await;
+    let id = create(&h.handle, Brand::Audi, Duration::from_secs(60)).await;
+    wait_for(T, || h.audi.counters().fetches_of(&vin("0TEST")) >= 1).await;
+    h.handle.reauthenticate(&id).await.unwrap();
+    wait_for(T, || h.audi.login_previous().len() >= 2).await;
+    assert_eq!(h.audi.login_previous(), vec![None, None]);
+    h.handle.shutdown().await.unwrap();
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn a_panicking_task_is_respawned_and_the_supervisor_survives() {
     let h = start(|b| b, vec![], true).await;

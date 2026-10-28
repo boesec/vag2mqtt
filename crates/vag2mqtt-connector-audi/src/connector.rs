@@ -91,10 +91,17 @@ impl Connector for AudiConnector {
         &self.info
     }
 
-    async fn login(&self, credentials: &Credentials) -> Result<SessionState, ConnectorError> {
+    async fn login(
+        &self,
+        credentials: &Credentials,
+        previous: Option<&SessionState>,
+    ) -> Result<SessionState, ConnectorError> {
         let mut trace = self.trace.begin(&credentials.username);
         tracing::info!(target: LOG, strategy = self.strategy.name(), "logging in");
-        let session = self.strategy.login(credentials, &mut trace).await?;
+        let session = self
+            .strategy
+            .login(credentials, previous, &mut trace)
+            .await?;
         tracing::info!(target: LOG, strategy = self.strategy.name(), "login succeeded");
         Ok(session)
     }

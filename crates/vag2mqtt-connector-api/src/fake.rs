@@ -79,6 +79,7 @@ struct Script {
     counters: Counters,
     fetch_times: Vec<(Vin, Instant)>,
     login_sequence: u32,
+    login_previous: Vec<Option<serde_json::Value>>,
 }
 
 /// A connector whose behaviour is scripted by a [`FakeHandle`].
@@ -258,6 +259,13 @@ impl FakeHandle {
     pub fn fetch_times(&self) -> Vec<(Vin, Instant)> {
         self.script().fetch_times.clone()
     }
+
+    /// The payload of the `previous` session each `login` call received, in call order; `None`
+    /// for a call without one. Every session this fake hands out carries a `fake_token` of
+    /// `token-<n>`, `n` counting the successful logins from one.
+    pub fn login_previous(&self) -> Vec<Option<serde_json::Value>> {
+        self.script().login_previous.clone()
+    }
 }
 
 #[async_trait]
@@ -266,9 +274,16 @@ impl Connector for FakeConnector {
         &self.info
     }
 
-    async fn login(&self, _credentials: &Credentials) -> Result<SessionState, ConnectorError> {
+    async fn login(
+        &self,
+        _credentials: &Credentials,
+        previous: Option<&SessionState>,
+    ) -> Result<SessionState, ConnectorError> {
         let mut script = self.script();
         script.counters.logins += 1;
+        script
+            .login_previous
+            .push(previous.map(|session| session.payload.clone()));
         if let Some(error) = Failure::take(&mut script.login_failure) {
             return Err(error);
         }
@@ -371,11 +386,30 @@ mod tests {
         let (connector, handle) = FakeConnector::builder(Brand::Audi)
             .fail_login_once(ConnectorError::InvalidCredentials)
             .build();
-        let first = connector.login(&credentials()).await;
+        let first = connector.login(&credentials(), None).await;
         assert_eq!(first.unwrap_err(), ConnectorError::InvalidCredentials);
-        let second = connector.login(&credentials()).await.unwrap();
+        let second = connector.login(&credentials(), None).await.unwrap();
         assert_eq!(second.brand, Brand::Audi);
         assert_eq!(handle.counters().logins, 2);
+    }
+
+    #[tokio::test]
+    async fn every_login_records_the_session_it_replaces() {
+        let (connector, handle) = FakeConnector::builder(Brand::Audi)
+            .fail_login_once(ConnectorError::network("down"))
+            .build();
+        assert!(connector.login(&credentials(), None).await.is_err());
+        let first = connector.login(&credentials(), None).await.unwrap();
+        let second = connector.login(&credentials(), Some(&first)).await.unwrap();
+        assert_ne!(first.payload, second.payload, "a new session every time");
+        assert_eq!(
+            handle.login_previous(),
+            vec![
+                None,
+                None,
+                Some(serde_json::json!({ "fake_token": "token-1" }))
+            ]
+        );
     }
 
     #[tokio::test]
@@ -385,7 +419,7 @@ mod tests {
             .vehicles(vec![discovered()])
             .state(vin(), VehicleState::unsupported(fetched_at))
             .build();
-        let mut session = connector.login(&credentials()).await.unwrap();
+        let mut session = connector.login(&credentials(), None).await.unwrap();
         let vehicles = connector.list_vehicles(&mut session).await.unwrap();
         assert_eq!(vehicles, vec![discovered()]);
         let state = connector.fetch_state(&mut session, &vin()).await.unwrap();
@@ -410,7 +444,7 @@ mod tests {
         let (connector, handle) = FakeConnector::builder(Brand::Audi)
             .state(vin(), VehicleState::unsupported(Utc::now()))
             .build();
-        let mut session = connector.login(&credentials()).await.unwrap();
+        let mut session = connector.login(&credentials(), None).await.unwrap();
         handle.fail_fetch_once(vin(), ConnectorError::SessionExpired);
         handle.fail_fetch_once(
             vin(),
@@ -435,10 +469,10 @@ mod tests {
         assert!(connector.fetch_state(&mut session, &vin()).await.is_ok());
 
         handle.fail_login_always(ConnectorError::TwoFactorRequired);
-        assert!(connector.login(&credentials()).await.is_err());
-        assert!(connector.login(&credentials()).await.is_err());
+        assert!(connector.login(&credentials(), None).await.is_err());
+        assert!(connector.login(&credentials(), None).await.is_err());
         handle.clear_login_failure();
-        assert!(connector.login(&credentials()).await.is_ok());
+        assert!(connector.login(&credentials(), None).await.is_ok());
     }
 
     #[tokio::test]
@@ -446,7 +480,7 @@ mod tests {
         let (connector, _handle) = FakeConnector::builder(Brand::Audi)
             .session_ttl(Duration::from_secs(3600))
             .build();
-        let mut session = connector.login(&credentials()).await.unwrap();
+        let mut session = connector.login(&credentials(), None).await.unwrap();
         let first = session.expires_at.unwrap();
         assert!(first > Utc::now());
         connector.refresh(&mut session).await.unwrap();

@@ -148,7 +148,7 @@ async fn full_form_login_yields_a_session() {
     mount_token(&server).await;
 
     let connector = build_connector(&server, TraceConfig::disabled());
-    let session = connector.login(&credentials()).await.unwrap();
+    let session = connector.login(&credentials(), None).await.unwrap();
     let tokens = AudiTokens::from_session(&session).unwrap();
     assert_eq!(tokens.access.expose_secret(), "access-fixture");
     assert_eq!(tokens.strategy, "form");
@@ -190,7 +190,7 @@ async fn consent_page_is_posted_and_the_flow_continues() {
     mount_token(&server).await;
 
     let connector = build_connector(&server, TraceConfig::disabled());
-    assert!(connector.login(&credentials()).await.is_ok());
+    assert!(connector.login(&credentials(), None).await.is_ok());
 }
 
 #[tokio::test]
@@ -207,7 +207,7 @@ async fn invalid_password_maps_to_invalid_credentials() {
     )
     .await;
     let connector = build_connector(&server, TraceConfig::disabled());
-    let error = connector.login(&credentials()).await.unwrap_err();
+    let error = connector.login(&credentials(), None).await.unwrap_err();
     assert_eq!(error, ConnectorError::InvalidCredentials);
     assert_eq!(error.class(), ErrorClass::AuthInvalid);
 }
@@ -224,7 +224,7 @@ async fn throttled_maps_to_rate_limit_not_credentials() {
     )
     .await;
     let connector = build_connector(&server, TraceConfig::disabled());
-    let error = connector.login(&credentials()).await.unwrap_err();
+    let error = connector.login(&credentials(), None).await.unwrap_err();
     assert_eq!(error, ConnectorError::RateLimited { retry_after: None });
 }
 
@@ -237,7 +237,7 @@ async fn a_200_page_where_a_redirect_was_expected_is_a_parsing_error_with_the_st
     )
     .await;
     let connector = build_connector(&server, TraceConfig::disabled());
-    let error = connector.login(&credentials()).await.unwrap_err();
+    let error = connector.login(&credentials(), None).await.unwrap_err();
     assert_eq!(
         error,
         ConnectorError::Parsing {
@@ -258,7 +258,7 @@ async fn captcha_and_two_factor_pages_are_reported_as_such() {
     .await;
     let connector = build_connector(&server, TraceConfig::disabled());
     assert_eq!(
-        connector.login(&credentials()).await.unwrap_err(),
+        connector.login(&credentials(), None).await.unwrap_err(),
         ConnectorError::CaptchaRequired
     );
 
@@ -271,7 +271,7 @@ async fn captcha_and_two_factor_pages_are_reported_as_such() {
     .await;
     let connector = build_connector(&server, TraceConfig::disabled());
     assert_eq!(
-        connector.login(&credentials()).await.unwrap_err(),
+        connector.login(&credentials(), None).await.unwrap_err(),
         ConnectorError::TwoFactorRequired
     );
 }
@@ -287,7 +287,7 @@ async fn authorize_answering_200_html_is_reported_in_the_authorize_step() {
         .mount(&server)
         .await;
     let connector = build_connector(&server, TraceConfig::disabled());
-    let error = connector.login(&credentials()).await.unwrap_err();
+    let error = connector.login(&credentials(), None).await.unwrap_err();
     assert_eq!(
         error,
         ConnectorError::Parsing {
@@ -311,7 +311,7 @@ async fn backend_5xx_at_the_token_exchange_is_transient() {
         .mount(&server)
         .await;
     let connector = build_connector(&server, TraceConfig::disabled());
-    let error = connector.login(&credentials()).await.unwrap_err();
+    let error = connector.login(&credentials(), None).await.unwrap_err();
     assert_eq!(error.class(), ErrorClass::Transient);
     assert_eq!(
         error,
@@ -339,7 +339,7 @@ async fn token_exchange_400_carries_the_error_code() {
         .mount(&server)
         .await;
     let connector = build_connector(&server, TraceConfig::disabled());
-    let error = connector.login(&credentials()).await.unwrap_err();
+    let error = connector.login(&credentials(), None).await.unwrap_err();
     assert_eq!(
         error,
         ConnectorError::Manufacturer {
@@ -427,7 +427,7 @@ async fn trace_files_contain_no_secret_and_name_every_step() {
     mount_token(&server).await;
 
     let connector = build_connector(&server, TraceConfig::into_directory(dir.path()));
-    connector.login(&credentials()).await.unwrap();
+    connector.login(&credentials(), None).await.unwrap();
 
     let attempt = std::fs::read_dir(dir.path())
         .unwrap()
@@ -486,7 +486,7 @@ async fn without_the_trace_variable_nothing_is_written() {
     mount_callback_chain(&server).await;
     mount_token(&server).await;
     let connector = build_connector(&server, TraceConfig::disabled());
-    connector.login(&credentials()).await.unwrap();
+    connector.login(&credentials(), None).await.unwrap();
     assert_eq!(std::fs::read_dir(dir.path()).unwrap().count(), 0);
 }
 
@@ -548,7 +548,7 @@ async fn hybrid_flow_takes_its_tokens_from_the_callback() {
         .await;
 
     let connector = build_connector_with(&server, TraceConfig::disabled(), "code token id_token");
-    let session = connector.login(&credentials()).await.unwrap();
+    let session = connector.login(&credentials(), None).await.unwrap();
     let tokens = AudiTokens::from_session(&session).unwrap();
     assert_eq!(tokens.access.expose_secret(), "ACCESS-MARKER");
     assert!(
